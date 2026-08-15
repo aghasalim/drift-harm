@@ -13,3 +13,5 @@ artifacts/*.pkl
 artifacts/*.parquet
 
 # reports/ IS tracked: those are the measured results.
+.env
+.env.local
