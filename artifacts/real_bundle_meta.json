@@ -1,0 +1,14 @@
+{
+  "n_train": 236216,
+  "n_pool": 354324,
+  "n_features_model": 431,
+  "n_features_monitored": 60,
+  "n_top": 40,
+  "n_noise": 20,
+  "pool_fraud_rate": 0.03698592248902135,
+  "train_fraud_rate": 0.0319961391269008,
+  "pool_auc_full_features": 0.8914807352854138,
+  "pool_auc_monitored_only": 0.8565227189548913,
+  "train_dt_max": 5592303.0,
+  "pool_dt_min": 5592304.0
+}

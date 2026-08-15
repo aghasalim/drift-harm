@@ -1,0 +1,32 @@
+{
+  "dataset": "synthetic",
+  "alpha": 0.05,
+  "window": 20000,
+  "null_reps_total": 300,
+  "null_reps_calibration": 150,
+  "null_reps_validation": 150,
+  "suite_reps": 20,
+  "thresholds": {
+    "ks": 0.020265008509159084,
+    "psi": 0.002784528983757595,
+    "wasserstein": 0.024873986380583787,
+    "jensen_shannon": 0.028461904512213462,
+    "mmd": 0.00015898346900939932,
+    "c2st": 0.010537578125000004
+  },
+  "harm_threshold_auc_drop": 0.008233045783321968,
+  "harm_threshold_segment_auc_drop": 0.259467532181899,
+  "null_segment_auc_drop_mean": 0.20715936558160042,
+  "null_auc_drop_mean": 0.00010776112658209028,
+  "null_auc_drop_sd": 0.0055671773918502185,
+  "bundle": {
+    "n_pool": 150000,
+    "n_train": 100000,
+    "d": 60,
+    "n_informative": 40,
+    "n_irrelevant": 20,
+    "pool_positive_rate": 0.15493333333333334,
+    "pool_auc": 0.8422437158814222
+  },
+  "runtime_seconds": 1436.7
+}

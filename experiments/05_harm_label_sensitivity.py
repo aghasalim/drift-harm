@@ -1,0 +1,73 @@
+"""How much weight will the headline ranking carry? Two ways of asking.
+
+1. Change the harm definition. The headline ranking labels a trial harmful when
+   the *aggregate* AUC drop clears its null-calibrated threshold. That rule
+   scores the dilution archetypes as harmless, because damage confined to 3% of
+   rows barely moves an AUC computed over the whole window -- while the segment
+   AUC drop on those same trials is large and clears its own separately
+   calibrated threshold in every replicate. Re-scoring under
+   `harm = aggregate OR segment` gives a second, equally defensible ranking.
+
+2. Resample the trials. 240 trials is not many. A percentile bootstrap over
+   whole trials puts an interval on each MCC, which is the only honest way to
+   read a gap of 0.1 between two detectors.
+
+Both run on the saved CSVs, so they are free and need no re-simulation.
+"""
+
+from __future__ import annotations
+
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+
+from driftharm.detectors import DETECTOR_NAMES
+from driftharm.metrics import alignment, rank_detectors
+
+ROOT = Path(__file__).resolve().parents[1]
+REPORTS = ROOT / "reports"
+N_BOOT = 2000
+
+
+def bootstrap_mcc(trials: pd.DataFrame, n_boot: int = N_BOOT, seed: int = 0) -> pd.DataFrame:
+    rng = np.random.default_rng(seed)
+    harm = trials["harm"].to_numpy()
+    alarms = {d: trials[f"alarm_{d}"].to_numpy() for d in DETECTOR_NAMES}
+    draws = {d: [] for d in DETECTOR_NAMES}
+    for _ in range(n_boot):
+        i = rng.integers(0, len(trials), len(trials))
+        for d in DETECTOR_NAMES:
+            draws[d].append(alignment(harm[i], alarms[d][i])["mcc"])
+    rows = []
+    for d in DETECTOR_NAMES:
+        v = np.array(draws[d])
+        rows.append({
+            "detector": d,
+            "mcc": alignment(harm, alarms[d])["mcc"],
+            "mcc_lo95": float(np.quantile(v, 0.025)),
+            "mcc_hi95": float(np.quantile(v, 0.975)),
+            "p_mcc_above_zero": float((v > 0).mean()),
+        })
+    return pd.DataFrame(rows).sort_values("mcc", ascending=False).reset_index(drop=True)
+
+
+if __name__ == "__main__":
+    for which in ("real", "synthetic"):
+        f = REPORTS / f"{which}_trials.csv"
+        if not f.exists():
+            continue
+        t = pd.read_csv(f)
+
+        boot = bootstrap_mcc(t)
+        boot.to_csv(REPORTS / f"{which}_ranking_bootstrap.csv", index=False)
+        print(f"\n=== {which}: headline MCC with {N_BOOT}-draw bootstrap interval ===")
+        print(boot.round(3).to_string(index=False))
+
+        t2 = t.copy()
+        t2["harm"] = ((t2["harm"] == 1) | (t2["segment_harm"].fillna(0) == 1)).astype(int)
+        out = rank_detectors(t2, DETECTOR_NAMES)
+        out.to_csv(REPORTS / f"{which}_ranking_segment_aware.csv", index=False)
+        print(f"\n=== {which}: ranking under harm = aggregate OR 3%-segment "
+              f"(base rate {t2['harm'].mean():.3f}) ===")
+        print(out.round(3).to_string(index=False))

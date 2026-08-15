@@ -1,0 +1,13 @@
+archetype,n,expected_harm,measured_harm_rate,mean_auc_drop,ks,psi,wasserstein,jensen_shannon,mmd,c2st
+true_null,20,False,0.05,-0.004871210748540161,0.0,0.0,0.1,0.05,0.05,0.05
+covariate_shift_mild,20,False,0.1,0.001120951562827105,1.0,1.0,1.0,1.0,1.0,1.0
+covariate_shift_moderate,20,False,0.25,0.010633306544366238,1.0,1.0,1.0,1.0,1.0,1.0
+covariate_shift_strong,20,False,0.65,0.03338806288430802,1.0,1.0,1.0,1.0,1.0,1.0
+concept_drift_no_covariate_shift,20,True,1.0,0.33700575188787746,0.0,0.0,0.1,0.05,0.05,0.05
+imputation_masked_null,20,True,1.0,0.05585221914164081,0.0,0.0,0.3,0.05,1.0,1.0
+imputation_visible,20,True,1.0,0.056035681931120705,1.0,1.0,1.0,1.0,1.0,1.0
+dilution_shift,20,True,0.05,0.0030067241369354293,0.65,1.0,1.0,0.85,0.05,0.9
+dilution_permuted,20,True,0.05,0.0023689835562714368,0.0,0.0,0.1,0.05,0.05,0.55
+irrelevant_feature_drift,20,False,0.05,-0.004871210748540161,1.0,1.0,1.0,1.0,1.0,1.0
+sudden_shift,20,True,1.0,0.13736177108840686,1.0,1.0,1.0,1.0,1.0,1.0
+gradual_shift,20,True,1.0,0.09274805930372947,1.0,1.0,1.0,1.0,0.05,1.0
