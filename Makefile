@@ -30,6 +30,7 @@ analysis:
 	$(PY) experiments/03_tables.py
 	$(PY) experiments/04_calibration_size.py
 	$(PY) experiments/05_harm_label_sensitivity.py
+	$(PY) experiments/06_ranking_stability.py
 
 clean:
 	rm -rf artifacts/*.pkl artifacts/*.parquet .pytest_cache

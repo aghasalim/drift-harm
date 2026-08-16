@@ -12,7 +12,13 @@ from sklearn.metrics import matthews_corrcoef
 
 from driftharm.calibration import draw_pair, harm_threshold, null_run, thresholds
 from driftharm.detectors import DETECTORS
-from driftharm.metrics import alignment, rank_detectors
+from driftharm.metrics import (
+    alignment,
+    bootstrap_mcc_draws,
+    rank_detectors,
+    rank_stability,
+    resample_index,
+)
 
 
 def test_perfect_detector_scores_one():
@@ -58,6 +64,69 @@ def test_rank_detectors_orders_by_mcc():
     })
     out = rank_detectors(df, ["bad", "good"])
     assert list(out["detector"]) == ["good", "bad"]
+
+
+def _grouped_trials(n_groups=12, n_reps=20, seed=0):
+    """A suite where the alarm is a deterministic function of the archetype --
+    which is what the real artifacts mostly look like. The replicate then carries
+    no information the archetype has not already given, and a bootstrap that
+    resamples replicates has to say so."""
+    import pandas as pd
+
+    rng = np.random.default_rng(seed)
+    arch = np.repeat([f"a{i}" for i in range(n_groups)], n_reps)
+    harm_by_group = rng.integers(0, 2, n_groups)
+    alarm_by_group = np.where(rng.random(n_groups) < 0.7, harm_by_group, 1 - harm_by_group)
+    return pd.DataFrame({
+        "archetype": arch,
+        "harm": np.repeat(harm_by_group, n_reps),
+        "alarm_d": np.repeat(alarm_by_group, n_reps),
+    })
+
+
+def test_stratified_resample_keeps_every_archetype_at_its_own_size():
+    import pandas as pd
+
+    g = _grouped_trials()["archetype"].to_numpy()
+    i = resample_index(np.random.default_rng(0), g, "stratified_by_archetype")
+    assert pd.Series(g[i]).value_counts().to_dict() == pd.Series(g).value_counts().to_dict()
+
+
+def test_cluster_resample_takes_whole_archetypes_or_none():
+    """A cluster draw must never split an archetype: every archetype it picks
+    arrives with all of its replicates, and some archetypes are absent."""
+    g = _grouped_trials()["archetype"].to_numpy()
+    counts = {}
+    for _ in range(20):
+        i = resample_index(np.random.default_rng(_), g, "cluster_by_archetype")
+        assert len(i) == len(g)
+        for a, c in zip(*np.unique(g[i], return_counts=True)):
+            counts.setdefault(a, set()).add(int(c))
+    block = int((g == g[0]).sum())
+    for a, seen in counts.items():
+        assert all(c % block == 0 for c in seen), (a, seen)
+
+
+def test_cluster_bootstrap_is_far_wider_than_the_flat_one():
+    """The claim experiment 06 rests on. When the alarm is fixed by the
+    archetype, 240 trials carry 12 facts, not 240, and a flat trial bootstrap
+    reports an interval that is too narrow to mean what it looks like."""
+    t = _grouped_trials()
+    widths = {}
+    for scheme in ("iid_trial", "stratified_by_archetype", "cluster_by_archetype"):
+        v = bootstrap_mcc_draws(t, ["d"], scheme, n_boot=400, seed=1)[:, 0]
+        widths[scheme] = float(np.quantile(v, 0.975) - np.quantile(v, 0.025))
+    assert widths["cluster_by_archetype"] > 3 * widths["iid_trial"]
+    # Resampling replicates of a group-determined alarm cannot move the estimate.
+    assert widths["stratified_by_archetype"] < 1e-9
+
+
+def test_rank_probabilities_form_a_distribution():
+    draws = np.random.default_rng(0).normal(size=(500, 3))
+    out = rank_stability(draws, ["a", "b", "c"], draws.mean(0))
+    cols = ["p_rank1", "p_rank2", "p_rank3"]
+    assert out[cols].to_numpy().sum(axis=1) == pytest.approx(np.ones(3))
+    assert out[cols].to_numpy().sum(axis=0) == pytest.approx(np.ones(3))
 
 
 def test_draw_pair_is_disjoint():

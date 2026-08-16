@@ -23,7 +23,7 @@ import numpy as np
 import pandas as pd
 
 from driftharm.detectors import DETECTOR_NAMES
-from driftharm.metrics import alignment, rank_detectors
+from driftharm.metrics import alignment, bootstrap_mcc_draws, rank_detectors
 
 ROOT = Path(__file__).resolve().parents[1]
 REPORTS = ROOT / "reports"
@@ -31,20 +31,18 @@ N_BOOT = 2000
 
 
 def bootstrap_mcc(trials: pd.DataFrame, n_boot: int = N_BOOT, seed: int = 0) -> pd.DataFrame:
-    rng = np.random.default_rng(seed)
+    """Flat trial bootstrap. Experiment 06 shows this scheme is the optimistic
+    one -- it treats 240 trials as 240 independent facts when the alarm outcome
+    is fixed by the archetype in most cells. Kept here because it is what the
+    headline interval has always been; 06 reports the other two schemes."""
+    draws = bootstrap_mcc_draws(trials, DETECTOR_NAMES, "iid_trial", n_boot, seed)
     harm = trials["harm"].to_numpy()
-    alarms = {d: trials[f"alarm_{d}"].to_numpy() for d in DETECTOR_NAMES}
-    draws = {d: [] for d in DETECTOR_NAMES}
-    for _ in range(n_boot):
-        i = rng.integers(0, len(trials), len(trials))
-        for d in DETECTOR_NAMES:
-            draws[d].append(alignment(harm[i], alarms[d][i])["mcc"])
     rows = []
-    for d in DETECTOR_NAMES:
-        v = np.array(draws[d])
+    for k, d in enumerate(DETECTOR_NAMES):
+        v = draws[:, k]
         rows.append({
             "detector": d,
-            "mcc": alignment(harm, alarms[d])["mcc"],
+            "mcc": alignment(harm, trials[f"alarm_{d}"].to_numpy())["mcc"],
             "mcc_lo95": float(np.quantile(v, 0.025)),
             "mcc_hi95": float(np.quantile(v, 0.975)),
             "p_mcc_above_zero": float((v > 0).mean()),

@@ -71,6 +71,70 @@ def rank_detectors(trials: pd.DataFrame, detector_names) -> pd.DataFrame:
     return pd.DataFrame(rows)[cols].sort_values("mcc", ascending=False).reset_index(drop=True)
 
 
+BOOTSTRAP_SCHEMES = (
+    "iid_trial",              # every trial independent -- what a flat bootstrap assumes
+    "stratified_by_archetype",  # more replicates of *these* archetypes
+    "cluster_by_archetype",   # a different suite of comparable archetypes
+)
+
+
+def resample_index(rng, groups: np.ndarray, scheme: str) -> np.ndarray:
+    """Row indices for one bootstrap draw under `scheme`.
+
+    The three schemes answer three different questions and give intervals that
+    differ by a factor of four, so which one is meant has to be stated. See the
+    README section on what the ranking is uncertain about.
+    """
+    n = len(groups)
+    if scheme == "iid_trial":
+        return rng.integers(0, n, n)
+    levels = list(dict.fromkeys(groups))
+    blocks = [np.flatnonzero(groups == a) for a in levels]
+    if scheme == "stratified_by_archetype":
+        return np.concatenate([rng.choice(b, len(b), replace=True) for b in blocks])
+    if scheme == "cluster_by_archetype":
+        pick = rng.choice(len(blocks), len(blocks), replace=True)
+        return np.concatenate([blocks[k] for k in pick])
+    raise ValueError(f"unknown bootstrap scheme {scheme!r}")
+
+
+def bootstrap_mcc_draws(trials: pd.DataFrame, detector_names, scheme: str = "iid_trial",
+                        n_boot: int = 2000, seed: int = 0,
+                        group_col: str = "archetype") -> np.ndarray:
+    """`(n_boot, n_detectors)` array of MCC draws."""
+    rng = np.random.default_rng(seed)
+    harm = trials["harm"].to_numpy()
+    alarms = np.column_stack([trials[f"alarm_{d}"].to_numpy() for d in detector_names])
+    groups = trials[group_col].to_numpy()
+    out = np.empty((n_boot, len(detector_names)))
+    for b in range(n_boot):
+        i = resample_index(rng, groups, scheme)
+        h = harm[i]
+        for k in range(len(detector_names)):
+            out[b, k] = alignment(h, alarms[i, k])["mcc"]
+    return out
+
+
+def rank_stability(draws: np.ndarray, detector_names, point: np.ndarray) -> pd.DataFrame:
+    """Per-detector interval plus how often it takes each rank across draws."""
+    order = (-draws).argsort(axis=1).argsort(axis=1) + 1  # 1 = best MCC in that draw
+    rows = []
+    for k, d in enumerate(detector_names):
+        v = draws[:, k]
+        rec = {
+            "detector": d,
+            "mcc": float(point[k]),
+            "mcc_lo95": float(np.quantile(v, 0.025)),
+            "mcc_hi95": float(np.quantile(v, 0.975)),
+            "ci_width": float(np.quantile(v, 0.975) - np.quantile(v, 0.025)),
+            "p_mcc_above_zero": float((v > 0).mean()),
+        }
+        for r in range(1, len(detector_names) + 1):
+            rec[f"p_rank{r}"] = float((order[:, k] == r).mean())
+        rows.append(rec)
+    return pd.DataFrame(rows).sort_values("mcc", ascending=False).reset_index(drop=True)
+
+
 def per_archetype(trials: pd.DataFrame, detector_names) -> pd.DataFrame:
     """Alarm rate per detector per archetype, next to the measured harm rate."""
     rows = []

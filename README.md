@@ -10,60 +10,201 @@ window scores both, and the drop in its AUC — measured against a null of
 window pairs where nothing happened — is the harm label. Six detectors are
 calibrated against that same null at a common 5% false-alarm target, so no
 detector is running a tighter threshold than any other. Then I cross-tabulate
-alarms against harm and rank by MCC.
+alarms against harm and score by MCC.
+
+The headline finding is a negative one: **the resulting order is not stable
+enough to be a ranking.** What survives is the per-failure-mode table, the
+measured harm labels, and a set of specific mechanisms — which is what the rest
+of this is about.
 
 Everything below comes from a file in [`reports/`](reports/). Where I did not
 measure something, I say so.
 
-## Headline: harm alignment on IEEE-CIS fraud data
+## Headline: this is not a ranking
 
 240 trials (12 archetypes × 20 replicates), 20,000-row windows, harm base rate
 51.7%. MCC, precision and recall are all with respect to *harm*, not with
-respect to whether the distribution moved. The interval is a 2,000-draw
-percentile bootstrap over whole trials.
+respect to whether the distribution moved.
 
-| detector | MCC | 95% CI | harm-precision | harm-recall | specificity | TP | FP | FN | TN |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| MMD | **0.189** | [0.061, 0.315] | 0.593 | 0.694 | 0.491 | 86 | 59 | 38 | 57 |
-| C2ST | 0.089 | [−0.035, 0.207] | 0.539 | 0.831 | 0.241 | 103 | 88 | 21 | 28 |
-| Wasserstein | 0.058 | [−0.069, 0.176] | 0.535 | 0.742 | 0.310 | 92 | 80 | 32 | 36 |
-| KS | 0.051 | [−0.081, 0.179] | 0.536 | 0.661 | 0.388 | 82 | 71 | 42 | 45 |
-| Jensen-Shannon | −0.003 | [−0.137, 0.121] | 0.516 | 0.669 | 0.328 | 83 | 78 | 41 | 38 |
-| PSI | −0.012 | [−0.141, 0.112] | 0.512 | 0.661 | 0.328 | 82 | 78 | 42 | 38 |
+| detector | MCC | 95% CI, trials resampled | 95% CI, **archetypes resampled** | P(MCC > 0) | P(best of six) | harm-precision | harm-recall | specificity |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| MMD | 0.189 | [0.061, 0.315] | [−0.353, 0.674] | 0.76 | 0.57 | 0.593 | 0.694 | 0.491 |
+| C2ST | 0.089 | [−0.035, 0.207] | [−0.353, 0.495] | 0.66 | 0.18 | 0.539 | 0.831 | 0.241 |
+| Wasserstein | 0.058 | [−0.069, 0.176] | [−0.468, 0.535] | 0.59 | 0.15 | 0.535 | 0.742 | 0.310 |
+| KS | 0.051 | [−0.081, 0.179] | [−0.460, 0.542] | 0.59 | 0.11 | 0.536 | 0.661 | 0.388 |
+| Jensen-Shannon | −0.003 | [−0.137, 0.121] | [−0.511, 0.476] | 0.51 | 0.00 | 0.516 | 0.669 | 0.328 |
+| PSI | −0.012 | [−0.141, 0.112] | [−0.559, 0.496] | 0.50 | 0.00 | 0.512 | 0.661 | 0.328 |
 
 Source: [`reports/real_ranking.csv`](reports/real_ranking.csv),
-[`reports/real_ranking_bootstrap.csv`](reports/real_ranking_bootstrap.csv).
+[`reports/real_rank_stability.csv`](reports/real_rank_stability.csv). Both
+intervals are 2,000-draw percentile bootstraps; `P(MCC > 0)` and
+`P(best of six)` are under the archetype-resampled one.
 
-The ranking is the least interesting thing in that table. Two things matter more:
+**Read the fourth column, not the second.** The narrow interval resamples the
+240 trials as if they were 240 independent facts. They are not: in 53 of the 72
+(detector × archetype) cells on real data the alarm rate is exactly 0.00 or
+1.00, so a replicate tells you almost nothing the archetype has not already
+fixed. Resampling the twelve archetypes as clusters instead widens every
+interval by a factor of 3.5 to 4.2, and every one of them then contains zero.
+The detector with the best point estimate is best in 57% of resampled suites;
+three of the other five take first place between 11% and 18% of the time.
 
-**Harm-precision runs 0.512 to 0.593 against a base rate of 0.517.** Being told
-a detector fired moves my belief that the model is damaged by between −0.5 and
-+7.6 percentage points. Five of the six detectors are inside a bootstrap
-interval that contains zero MCC; only MMD's interval excludes it
-(p(MCC > 0) = 0.999, versus 0.916 for C2ST and 0.409 for PSI). At 240 trials I
-cannot separate ranks 2 through 6 from each other or from chance.
+So the honest summary of this table is: **on this suite, at this size, no
+detector's harm-MCC is distinguishable from zero, and the ordering should not be
+read as a ranking.** Harm-precision runs 0.512 to 0.593 against a base rate of
+0.517 — being told a detector fired moves my belief that the model is damaged by
+between −0.5 and +7.6 percentage points. That is the result.
 
-**And the ranking does not reproduce on the synthetic control.** Same code, same
-α, a 60-dimensional correlated-Gaussian bundle with a logistic label:
+This corrects what this README used to say. It previously reported the narrow
+interval as *the* interval and claimed MMD's excluded zero. That claim holds
+only if you treat these exact twelve archetypes as the entire universe of
+failures, which the limitations section already says they are not.
 
-| detector | MCC (synthetic) | 95% CI | rank on real |
-| --- | --- | --- | --- |
-| Jensen-Shannon | 0.169 | [0.043, 0.296] | 5th |
-| Wasserstein | 0.161 | [0.034, 0.285] | 3rd |
-| PSI | 0.127 | [−0.002, 0.253] | 6th |
-| C2ST | 0.099 | [−0.028, 0.222] | 2nd |
-| MMD | 0.094 | [−0.032, 0.219] | **1st** |
-| KS | 0.026 | [−0.100, 0.152] | 4th |
+## Why the real and synthetic rankings disagree
+
+Running the same code on a 60-dimensional correlated-Gaussian control gives a
+different order — MMD 1st → 5th, PSI 6th → 3rd, Spearman −0.43:
+
+| detector | MCC (synthetic) | 95% CI, archetypes resampled | P(best of six) | rank on real |
+| --- | --- | --- | --- | --- |
+| Jensen-Shannon | 0.169 | [−0.325, 0.566] | 0.56 | 5th |
+| Wasserstein | 0.161 | [−0.329, 0.564] | 0.22 | 3rd |
+| PSI | 0.127 | [−0.313, 0.468] | 0.03 | 6th |
+| C2ST | 0.099 | [−0.340, 0.485] | 0.02 | 2nd |
+| MMD | 0.094 | [−0.297, 0.425] | 0.17 | **1st** |
+| KS | 0.026 | [−0.398, 0.446] | 0.00 | 4th |
 
 Source: [`reports/synthetic_ranking.csv`](reports/synthetic_ranking.csv),
-[`reports/synthetic_ranking_bootstrap.csv`](reports/synthetic_ranking_bootstrap.csv).
+[`reports/synthetic_rank_stability.csv`](reports/synthetic_rank_stability.csv).
 
-MMD is first on real data and fifth on synthetic; PSI is last on real and third
-on synthetic. Spearman rank correlation between the two MCC columns is −0.43
-(p = 0.40, n = 6) — not significantly negative, but nowhere near the agreement
-you would want before recommending a detector. I would not carry a detector choice from one of these datasets to the other, and
-I do not think anyone should carry one from this benchmark to their own stack
-without re-running it there.
+I set out to find what made the two datasets disagree. The main answer is that
+**there is no cross-dataset effect left to explain once the suite's own
+instability is priced in** — but two real, mechanical differences sit
+underneath it, and both are worth having. In order.
+
+### The disagreement is inside the range one dataset produces against itself
+
+Take one dataset. Draw two independent bootstrap resamples of it. Rank the six
+detectors in each. Correlate the two rankings. That is the reference
+distribution the observed −0.43 has to be read against, and it is in
+[`reports/ranking_agreement.csv`](reports/ranking_agreement.csv):
+
+| resampling unit | mean self-Spearman, real | 5th pct | P(self-Spearman ≤ −0.43) |
+| --- | --- | --- | --- |
+| trials | +0.82 | +0.43 | 0.000 |
+| replicates within archetype | +0.87 | +0.71 | 0.000 |
+| **archetypes (clusters)** | **+0.31** | **−0.58** | **0.146** |
+
+Synthetic gives 0.148 for the same cell. So under the resampling that treats the
+taxonomy as one draw of twelve designed failures, a dataset resampled against
+*itself* produces a ranking correlation at or below −0.43 about one time in
+seven. The real-versus-synthetic disagreement is a draw from that distribution.
+It is not evidence that the two datasets are asking different questions; it is
+one more sample of how unstable a six-detector ranking over twelve archetypes
+is.
+
+The direct demonstration: **dropping a single archetype reorders the real
+ranking more than switching datasets does.** Twelve leave-one-out rankings
+([`reports/real_leave_one_archetype_out.csv`](reports/real_leave_one_archetype_out.csv)):
+removing `imputation_masked_null` gives Spearman −0.46 against the full-suite
+order and makes KS the winner; removing `dilution_shift` gives 0.67 and makes
+Wasserstein the winner. The other ten leave MMD on top, and five of them leave
+the order completely unchanged. Two archetypes out of twelve carry the result.
+
+### What is genuinely different, and it is those same two archetypes
+
+Same twelve archetype names, two datasets, different experiments
+([`reports/archetype_disagreement.csv`](reports/archetype_disagreement.csv)).
+Mean |harm-rate difference| across the twelve is 0.204:
+
+| archetype | harm rate, real | harm rate, synthetic | mean \|alarm-rate difference\| |
+| --- | --- | --- | --- |
+| imputation_masked_null | 1.00 | 1.00 | **0.60** |
+| gradual_shift | 1.00 | 0.55 | 0.29 |
+| dilution_shift | **0.05** | **1.00** | 0.26 |
+| dilution_permuted | 0.05 | 0.15 | 0.16 |
+| covariate_shift_strong | 0.65 | 0.25 | 0.00 |
+| irrelevant_feature_drift | 0.05 | 0.35 | 0.00 |
+| the other six | — | — | ≤ 0.09 |
+
+The two archetypes the ranking hangs on are the two the datasets disagree about
+most, and MMD's first place on real data is built out of exactly those two: it
+is one of only two detectors that catch `imputation_masked_null` (20/20, against
+KS and PSI's 0/20) and the only one that stays quiet on `dilution_shift`, which
+the aggregate harm rule scores as harmless (0.05). Neither holds on synthetic —
+there everyone catches the masked null, and `dilution_shift` is harmful in
+20/20 replicates, so declining to fire on it is a miss rather than a saved false
+alarm.
+
+**Why the masked-null blind spot does not reproduce.** I had written this up as
+a NaN-policy result: the univariate detectors drop non-finite values, so they
+compare the surviving values against an unchanged reference and see nothing.
+That mechanism is incomplete. They do not see nothing — dropping 90% of a
+column leaves a small-sample footprint, and it is *the same size on both
+datasets*
+([`reports/masked_null_footprint.csv`](reports/masked_null_footprint.csv)):
+
+| | mean max-KS on the archetype | mean max-KS under the null | alarm threshold | alarm rate |
+| --- | --- | --- | --- | --- |
+| real | 0.0287 | 0.0297 | 0.0444 | 0/20 |
+| synthetic | 0.0288 | 0.0163 | 0.0203 | 20/20 |
+
+Identical footprint, opposite verdict, because the *null floors* differ. On
+IEEE-CIS the max-over-columns KS null is set by columns that are already mostly
+missing before any archetype touches them: `id_02` is 81.3% NaN (effective n
+3,736 per window) and produces a null KS of 0.0251 on its own; `D8` is 89.8%
+NaN; 19 of the 60 monitored columns are above 80% NaN
+([`reports/real_null_floor_by_column.csv`](reports/real_null_floor_by_column.csv)).
+Masking a dense column to 10% produces the same effective sample size those
+columns already have, so the footprint lands under a floor they built. The
+synthetic bundle has no missing values at all, so its floor sits at n = 20,000
+and the identical footprint stands 1.8× above it.
+
+That is a sharper finding than the one it replaces: **a drop-NaN detector's
+blindness to a feed outage is not a property of the detector, it is a property
+of how much missingness the reference table already had.** The synthetic bundle
+is a monitored table with no missing values at all, and KS caught the same
+failure there on 20 of 20 replicates.
+
+### Labels or alarm behaviour? Both, and neither is decisive
+
+Scoring one dataset's alarms against the other's harm labels, pairing replicates
+at random within archetype and averaging over 400 pairings
+([`reports/ranking_swap_decomposition.csv`](reports/ranking_swap_decomposition.csv)):
+
+| alarms from | harm labels from | winner | Spearman vs the real ranking |
+| --- | --- | --- | --- |
+| real | real | MMD | 1.00 |
+| real | synthetic | C2ST | 0.60 |
+| synthetic | real | PSI | −0.83 |
+| synthetic | synthetic | Jensen-Shannon | −0.43 |
+
+Both factors move the order and the alarm-behaviour factor moves it more
+(−0.83 versus 0.60). MMD's MCC falls from 0.189 to 0.004 under synthetic harm
+labels and to 0.049 under synthetic alarm behaviour. But every one of these
+shifts is inside the archetype-resampled interval, so the decomposition says
+*where* the difference lives without establishing that any of it is signal.
+
+### Two hypotheses I tested and rejected
+
+- **Dimensionality and sample size.** Not the explanation, and not even a
+  difference: the detectors consume a 60-column × 20,000-row matrix on both
+  datasets, at the same α, the same 300 null replicates and the same 20
+  replicates per archetype ([`reports/real_run_meta.json`](reports/real_run_meta.json),
+  [`reports/synthetic_run_meta.json`](reports/synthetic_run_meta.json)). The real
+  *model* has 431 features against the synthetic model's 60, but the 371 it is
+  not handed are held at the training median, so that difference reaches the
+  harm label, not the detectors.
+- **More replicates would settle it.** They would not. Resampling replicates
+  while holding the twelve archetypes fixed already gives MMD [0.142, 0.241] and
+  P(best) = 1.00 — the estimate *conditional on this taxonomy* is precise
+  and more trials would only tighten it further. The uncertainty is not in the
+  sample size, it is in the choice of the twelve archetypes, and no number of
+  replicates touches that.
+
+I would not carry a detector choice from either of these datasets to the other,
+and I do not think anyone should carry one from this benchmark to their own
+stack without re-running it there.
 
 ## Where the errors actually come from
 
@@ -114,15 +255,22 @@ replicates, which is their false-alarm rate. This is not a tuning failure. No
 function of P(x) can see a change in P(y|x) when P(x) has not moved. It is in
 the suite so the blind spot has a number attached.
 
-**The NaN policy decides whether a feed outage is visible.** `imputation_masked_null`
-nulls 90% of the values in the six highest-importance columns; serving imputes
-the reference median, so the model loses the information and the harm rate is
-1.00. The univariate detectors drop non-finite values before comparing — which
-is what `scipy.stats.ks_2samp` and every PSI implementation I have read do — so
-they compare the surviving values against an unchanged reference and see nothing:
-KS 0/20, PSI 0/20. MMD and C2ST catch 20/20, but only because they must impute
-before they can compute anything, so they are looking at the model's view by
-accident rather than by design.
+**The NaN policy decides whether a feed outage is visible — on this dataset.**
+`imputation_masked_null` nulls 90% of the values in the six highest-importance
+columns; serving imputes the reference median, so the model loses the
+information and the harm rate is 1.00. The univariate detectors drop non-finite
+values before comparing — which is what `scipy.stats.ks_2samp` and every PSI
+implementation I have read do — so they compare the surviving values against a
+reference whose shape has not changed: KS 0/20, PSI 0/20. MMD and C2ST catch
+20/20, but only because they must impute before they can compute anything, so
+they are looking at the model's view by accident rather than by design.
+
+The qualifier matters and I only found it by chasing the synthetic disagreement.
+Dropping the nulls does not erase the signal, it converts it into a
+sample-size effect, and whether that clears the alarm threshold depends on how
+much missingness the *reference* columns already carried. The same archetype on
+the synthetic bundle gives KS 20/20 off an almost identical raw statistic. See
+the diagnosis section above for the two null floors.
 
 `imputation_visible` is the same failure with the monitor wired to the
 post-imputation feature vector. Identical harm (mean AUC drop 0.0560 vs 0.0559,
@@ -130,14 +278,14 @@ both 1.00 harm rate); KS and PSI go from 0/20 to 20/20. **Changing which table
 the monitor reads bought more recall on this failure than changing the
 detector did.**
 
-**The best-ranked detector has the worst detection delay.** In the gradual-vs-sudden
+**The best-scoring detector has the worst detection delay.** In the gradual-vs-sudden
 run ([`reports/real_gradual_summary.csv`](reports/real_gradual_summary.csv)), the
 gradual arm's harm rate is already 1.00 at batch 1 with a mean AUC drop of
 0.076. Five detectors alarm on 6/6 replicates at batch 1. MMD alarms on 0/6, and
 does not reach 6/6 until batch 5 — by which point the mean AUC drop is 0.129.
 On the synthetic bundle, where the gradual arm's harm rate rises from 0.33 at
 batch 1 to 1.00 by batch 3, MMD again lags to batch 5 while PSI and JS are at
-1.00 by batch 2. MMD's first place on real data is bought partly with
+1.00 by batch 2. MMD's top score on real data is bought partly with
 insensitivity: it declines the `dilution_shift` false alarms that cost the other
 five (0/19 versus 12–19/19) and pays for it by missing 19/20 gradual trials.
 
@@ -177,9 +325,12 @@ MMD goes from first to last; C2ST goes from second to first and is the only
 detector still above zero. Every MCC falls. I report the aggregate rule as the
 headline because it is one consistent rule applied to all twelve archetypes,
 whereas only two archetypes define a segment — but the honest summary is that
-**the headline ranking is an artifact of a harm definition that a reasonable
-person could set differently, and setting it differently reverses it.** Both
-tables are in `reports/`; neither is the answer.
+**the order is an artifact of a harm definition that a reasonable person could
+set differently, and setting it differently reverses it.** Both tables are in
+`reports/`; neither is the answer. This was the first sign of the instability
+the headline section now quantifies: one defensible change to the labelling
+moves the order about as far as changing dataset does, and both moves are inside
+the archetype-resampled interval.
 
 ### 2. Threshold calibration needs more null replicates than I first used
 
@@ -239,22 +390,26 @@ Fixing this needs an independent-covariance synthetic bundle, which I did not ru
 
 ### 4. MCC over F1, for a reason that shows up in the numbers
 
-C2ST has the best harm-F1 on real data (0.654) and ranks second on MCC (0.089),
+C2ST has the best harm-F1 on real data (0.654) and comes second on MCC (0.089),
 because F1 ignores true negatives and C2ST buys its 0.831 recall with 88 false
 positives and a specificity of 0.241. MCC responds to the whole table, which is
-why it is the ranking column. Both are in `reports/`.
+why it is the scoring column. Both are in `reports/`.
 
 ## Limitations
 
 - **One real dataset, one synthetic generator.** IEEE-CIS is tabular fraud with a
   3.7% positive rate. Nothing here has been checked on text, images, time series,
   or a different tabular domain.
-- **240 trials per dataset is not many.** Only MMD's real-data MCC has a bootstrap
-  interval excluding zero. Every other ordering in this README is within noise,
-  and I have not run a significance test on any pairwise MCC gap.
-- **The 12 archetypes are my taxonomy, not an exhaustive one.** The ranking is a
-  ranking on this suite. Adding or removing archetypes moves it — finding 1 shows
-  how far a single labelling choice moves it.
+- **The suite is the sample size, not the trial count.** 240 trials sounds like
+  240 facts and is closer to 12: the alarm rate is exactly 0.00 or 1.00 in 53 of
+  the 72 (detector × archetype) cells. Resampling archetypes instead of trials
+  puts zero inside every detector's interval on both datasets
+  ([`reports/real_rank_stability.csv`](reports/real_rank_stability.csv)). More
+  replicates cannot fix this; more *archetypes* might.
+- **The 12 archetypes are my taxonomy, not an exhaustive one**, and that is where
+  essentially all of the uncertainty lives. Dropping one of the twelve reorders
+  the real result by Spearman −0.46. I have not run a significance test on any
+  pairwise MCC gap, and given the above I do not think one would be meaningful.
 - **Detector hyperparameters are fixed and not swept.** 10 PSI bins, 20 JS bins,
   1,500-row MMD subsample, 8,000-row C2ST subsample with a 120-tree LightGBM
   discriminator. A detector may look bad here because of a setting rather than
@@ -304,9 +459,10 @@ DriftHarm adds:
 4. **A common calibration procedure** — every detector at the same measured 5%
    null false-alarm rate — so a ranking cannot be explained by one detector
    having a tighter threshold.
-5. **A ranking metric** (MCC over the harm/alarm table) with a bootstrap
-   interval, plus the finding that the ranking is not stable across datasets or
-   across a defensible change in the harm definition.
+5. **A scoring metric** (MCC over the harm/alarm table) with a bootstrap
+   interval — and then the finding that under the resampling that matches the
+   design, the score cannot separate any two of the six. The negative result is
+   the contribution here, not the order it happens to produce.
 
 **Prior art I checked and confirmed:**
 
@@ -342,14 +498,15 @@ DriftHarm adds:
 
 If you want the reliable version of the argument, read those. This repo's claim
 is narrower: given a fixed model and a taxonomy of failures with measured harm,
-here is what six standard detectors actually score, and here is how unstable
-that score is.
+here is what six standard detectors actually score, here is the mechanism behind
+each disagreement, and here is the demonstration that the score is too unstable
+to be read as a ranking.
 
 ## Reproducing
 
 ```bash
 make setup                # venv + editable install
-make test                 # 41 tests, ~7s, no dataset needed
+make test                 # 45 tests, ~7s, no dataset needed
 make bench-synthetic      # synthetic run end to end (~24 min on an M-series laptop)
 make analysis             # regenerate every table above from reports/*.csv (free)
 ```
@@ -377,11 +534,12 @@ src/driftharm/
   harm.py          AUC drop, aggregate and segment-restricted
   calibration.py   null run, thresholds at a target FAR, out-of-sample null summary
   suite.py         window drawing, archetype application, alarm labelling, gradual curve
-  metrics.py       harm precision/recall/F1/MCC, ranking, per-archetype table
+  metrics.py       harm precision/recall/F1/MCC, per-archetype table, three bootstrap schemes
   data.py          IEEE-CIS bundle (train early, hold out late) and the synthetic control
-experiments/       01 prepare, 02 benchmark, 03 tables, 04 calibration sweep, 05 ranking robustness
+experiments/       01 prepare, 02 benchmark, 03 tables, 04 calibration sweep,
+                   05 harm-label sensitivity, 06 rank stability and the real-vs-synthetic diagnosis
 reports/           every CSV/JSON quoted above — tracked on purpose
-tests/             41 tests on the generators and metrics
+tests/             45 tests on the generators and metrics
 ```
 
 The tests check invariants of the instrument, not that it runs: that
@@ -389,7 +547,9 @@ The tests check invariants of the instrument, not that it runs: that
 preserves every marginal exactly, that `irrelevant_feature_drift` touches only
 zero-importance columns, that covariate shift draws only real rows, that MCC
 matches scikit-learn, that an always-alarm detector scores zero MCC despite
-perfect recall, and that a threshold fitted on one null half holds its
-false-alarm rate on the other.
+perfect recall, that a threshold fitted on one null half holds its false-alarm
+rate on the other, and that the cluster bootstrap is more than 3× wider than the
+flat one when the alarm is fixed by the archetype — which is the claim the
+headline section rests on.
 
 MIT licensed.
