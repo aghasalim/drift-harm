@@ -1,5 +1,45 @@
 # DriftHarm
 
+**Do drift detectors tell you the model got worse?**
+A benchmark where the harm label is measured rather than assumed, and the answer
+is that the resulting detector ranking is not stable enough to report.
+
+[![tests](https://img.shields.io/badge/tests-45%20passing-brightgreen.svg)](tests/)
+[![licence](https://img.shields.io/badge/licence-MIT-blue.svg)](LICENSE)
+
+---
+
+## Abstract
+
+Drift detectors are conventionally scored on whether they noticed a
+distributional change. That is not the question an on-call engineer has; the
+question is whether the alert meant the model degraded. This work builds a suite
+in which the answer is known by construction. Twelve failure archetypes are
+applied to windows drawn from a held-out pool; a model that has seen neither
+window scores both; and the drop in its AUC, measured against a null of window
+pairs where nothing was applied, is the harm label. Six detectors are calibrated
+against that same null at a common 5% false-alarm target, so no detector runs a
+tighter threshold than any other, and alarms are cross-tabulated against harm and
+scored by Matthews correlation.
+
+The headline result is negative. Under trial-level resampling MMD appears to win
+(MCC 0.189, 95% CI [0.061, 0.315]); under archetype-level resampling — the honest
+choice when twelve failure modes are the population of interest — the mean
+interval width grows from 0.25 to 0.99, every interval covers zero, and the
+ordering carries no information. What survives is the per-archetype table, the
+measured harm labels, and four specific instrument findings, all reported below.
+
+**Contributions.** (i) A harm label derived from measured AUC drop rather than
+assumed from the presence of drift. (ii) A common-null calibration protocol that
+puts six heterogeneous detectors on one false-alarm budget. (iii) Evidence that
+the detector ordering is an artefact of the resampling scheme. (iv) A
+characterisation of *which* failure modes each detector misses, which is stable
+even where the ranking is not.
+
+---
+
+## 1. Introduction
+
 Drift detectors are usually scored on whether they noticed that a distribution
 moved. That is not the question a person on call has. The question is whether
 the alert meant the model got worse.
@@ -20,7 +60,11 @@ of this is about.
 Everything below comes from a file in [`reports/`](reports/). Where I did not
 measure something, I say so.
 
-## Headline: this is not a ranking
+---
+
+## 2. Results
+
+### 2.1 The detector ranking is not stable
 
 ![ranking stability under three resampling schemes](reports/figures/ranking-stability.png)
 
@@ -69,7 +113,15 @@ interval as *the* interval and claimed MMD's excluded zero. That claim holds
 only if you treat these exact twelve archetypes as the entire universe of
 failures, which the limitations section already says they are not.
 
-## Why the real and synthetic rankings disagree
+![rank correlation when one archetype is dropped](reports/figures/leave-one-archetype-out.png)
+
+The instability is not an artefact of the bootstrap either. Removing a single
+archetype and re-ranking moves the order by as much as the resampling does, and
+changes the winner outright in several cases. A ranking that reflected a property
+of the detectors rather than of this particular suite would sit flat against the
+dashed line.
+
+### 2.2 Why the real and synthetic rankings disagree
 
 Running the same code on a 60-dimensional correlated-Gaussian control gives a
 different order — MMD 1st → 5th, PSI 6th → 3rd, Spearman −0.43:
@@ -91,7 +143,15 @@ I set out to find what made the two datasets disagree. The main answer is that
 instability is priced in** — but two real, mechanical differences sit
 underneath it, and both are worth having. In order.
 
-### The disagreement is inside the range one dataset produces against itself
+#### 2.2.1 The disagreement is inside the range one dataset produces against itself
+
+![cross-dataset disagreement against within-dataset spread](reports/figures/dataset-agreement.png)
+
+The grey bars span the 5th percentile to the median of the real suite re-ranked
+against itself. Under trial or stratified resampling the observed real-vs-synthetic
+correlation of −0.43 sits far outside that range; under archetype clustering it
+falls inside it. The two datasets disagree no more than one dataset disagrees with
+itself once you resample the thing that actually varies.
 
 Take one dataset. Draw two independent bootstrap resamples of it. Rank the six
 detectors in each. Correlate the two rankings. That is the reference
@@ -120,7 +180,7 @@ order and makes KS the winner; removing `dilution_shift` gives 0.67 and makes
 Wasserstein the winner. The other ten leave MMD on top, and five of them leave
 the order completely unchanged. Two archetypes out of twelve carry the result.
 
-### What is genuinely different, and it is those same two archetypes
+#### 2.2.2 What is genuinely different, and it is those same two archetypes
 
 Same twelve archetype names, two datasets, different experiments
 ([`reports/archetype_disagreement.csv`](reports/archetype_disagreement.csv)).
@@ -175,7 +235,7 @@ of how much missingness the reference table already had.** The synthetic bundle
 is a monitored table with no missing values at all, and KS caught the same
 failure there on 20 of 20 replicates.
 
-### Labels or alarm behaviour? Both, and neither is decisive
+#### 2.2.3 Labels or alarm behaviour? Both, and neither is decisive
 
 Scoring one dataset's alarms against the other's harm labels, pairing replicates
 at random within archetype and averaging over 400 pairings
@@ -194,7 +254,7 @@ labels and to 0.049 under synthetic alarm behaviour. But every one of these
 shifts is inside the archetype-resampled interval, so the decomposition says
 *where* the difference lives without establishing that any of it is signal.
 
-### Two hypotheses I tested and rejected
+#### 2.2.4 Two hypotheses I tested and rejected
 
 - **Dimensionality and sample size.** Not the explanation, and not even a
   difference: the detectors consume a 60-column × 20,000-row matrix on both
@@ -215,7 +275,15 @@ I would not carry a detector choice from either of these datasets to the other,
 and I do not think anyone should carry one from this benchmark to their own
 stack without re-running it there.
 
-## Where the errors actually come from
+### 2.3 Where the errors actually come from
+
+![harm accumulating against detector alarms along a gradual drift](reports/figures/gradual-drift.png)
+
+Under a gradual drift five of the six detectors are already saturated at batch 1,
+before most of the harm has accrued, so their alarm carries no timing information.
+MMD is the exception, and it is the one that climbs with the damage — which is
+also the detector that tops the headline table. Whether that is discrimination or
+luck is exactly what the confidence intervals above refuse to settle.
 
 ![measured harm against detector alarms, per archetype](reports/figures/archetype-breakdown.png)
 
@@ -308,12 +376,12 @@ batch 1 to 1.00 by batch 3, MMD again lags to batch 5 while PSI and JS are at
 insensitivity: it declines the `dilution_shift` false alarms that cost the other
 five (0/19 versus 12–19/19) and pays for it by missing 19/20 gradual trials.
 
-## Instrument findings
+## 3. Instrument findings
 
 Things I found wrong with the measuring apparatus, kept here rather than fixed
 in silence.
 
-### 1. The harm label is blind to segment damage, and the ranking depends on it
+### 3.1 The harm label is blind to segment damage, and the ranking depends on it
 
 The headline harm label is a threshold on the *aggregate* AUC drop over the
 whole 20,000-row window. Both dilution archetypes confine their damage to the
@@ -351,7 +419,14 @@ the headline section now quantifies: one defensible change to the labelling
 moves the order about as far as changing dataset does, and both moves are inside
 the archetype-resampled interval.
 
-### 2. Threshold calibration needs more null replicates than I first used
+### 3.2 Threshold calibration needs more null replicates than I first used
+
+![realised false-alarm rate against calibration sample size](reports/figures/calibration-size.png)
+
+At 20 null replicates every detector overshoots the 5% target by roughly double.
+The mean converges by about 200, but the 90th percentile is still at 10% there —
+so a threshold that looks calibrated on average is still firing twice as often as
+advertised in the tail.
 
 A threshold is the (1 − α) empirical quantile of a null sample, which means at
 α = 0.05 it is fitted to a handful of order statistics. I originally calibrated
@@ -390,7 +465,7 @@ Two corrections to how I first reported this, both against the artifacts:
   in because the direction it points at is confirmed by the table above, but the
   specific number was a single draw and should not be quoted.
 
-### 3. The synthetic bundle's "irrelevant" features are not causally irrelevant
+### 3.3 The synthetic bundle's "irrelevant" features are not causally irrelevant
 
 `build_synthetic_bundle` sets 20 of 60 generative weights to exactly zero and
 then forces their reported gain importance to zero, so that
@@ -407,14 +482,14 @@ irrelevant-feature result should be read as "drift in weakly-correlated
 low-importance columns", and the clean version of that archetype is the real one.
 Fixing this needs an independent-covariance synthetic bundle, which I did not run.
 
-### 4. MCC over F1, for a reason that shows up in the numbers
+### 3.4 MCC over F1, for a reason that shows up in the numbers
 
 C2ST has the best harm-F1 on real data (0.654) and comes second on MCC (0.089),
 because F1 ignores true negatives and C2ST buys its 0.831 recall with 88 false
 positives and a specificity of 0.241. MCC responds to the whole table, which is
 why it is the scoring column. Both are in `reports/`.
 
-## Limitations
+## 4. Limitations
 
 - **One real dataset, one synthetic generator.** IEEE-CIS is tabular fraud with a
   3.7% positive rate. Nothing here has been checked on text, images, time series,
@@ -448,7 +523,7 @@ why it is the scoring column. Both are in `reports/`.
 - **Detection delay is measured in batches, not wall-clock or transaction count**,
   and only for one corruption profile.
 
-## Relation to my own earlier work, and to prior art
+## 5. Related work
 
 I need to be precise about what is new here, because the headline observation is
 not.
@@ -521,7 +596,7 @@ here is what six standard detectors actually score, here is the mechanism behind
 each disagreement, and here is the demonstration that the score is too unstable
 to be read as a ranking.
 
-## Reproducing
+## 6. Reproducibility
 
 ```bash
 make setup                # venv + editable install
@@ -544,7 +619,7 @@ instrument. Held-out AUC is 0.891 on all 431 features and 0.857 through the
 CI runs the tests on Python 3.12 against the synthetic bundle only, so it never
 needs the 700 MB download.
 
-## Layout
+## 7. Repository layout
 
 ```
 src/driftharm/
@@ -557,7 +632,7 @@ src/driftharm/
   data.py          IEEE-CIS bundle (train early, hold out late) and the synthetic control
 experiments/       01 prepare, 02 benchmark, 03 tables, 04 calibration sweep,
                    05 harm-label sensitivity, 06 rank stability and the real-vs-synthetic
-                   diagnosis, 07 the two figures above
+                   diagnosis, 07 the six figures above
 reports/           every CSV/JSON quoted above — tracked on purpose
 reports/figures/   the figures, redrawn from those CSVs by `make figures`
 tests/             45 tests on the generators and metrics
