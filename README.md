@@ -22,6 +22,15 @@ measure something, I say so.
 
 ## Headline: this is not a ranking
 
+![ranking stability under three resampling schemes](reports/figures/ranking-stability.png)
+
+The point estimates are identical in all three panels. Only the error bars move.
+Resampling trials — what you do by default — gives a mean CI width of 0.25 and
+makes MMD look like a winner. Resampling *archetypes*, which is the honest choice
+when twelve failure modes are the population you care about, widens that to 0.99.
+Every interval then covers zero and they all overlap. There is no ranking left to
+report.
+
 240 trials (12 archetypes × 20 replicates), 20,000-row windows, harm base rate
 51.7%. MCC, precision and recall are all with respect to *harm*, not with
 respect to whether the distribution moved.
@@ -207,6 +216,16 @@ and I do not think anyone should carry one from this benchmark to their own
 stack without re-running it there.
 
 ## Where the errors actually come from
+
+![measured harm against detector alarms, per archetype](reports/figures/archetype-breakdown.png)
+
+The two blocks are the whole argument. Harm and alarms line up on the easy
+archetypes and come apart everywhere interesting. `concept_drift_no_covariate_shift`
+does harm every time and not one of the six notices, because by construction the
+covariates do not move. `irrelevant_feature_drift` does no harm and all six fire.
+`imputation_masked_null` harms every time and only MMD and C2ST see it. Note also
+that MMD, the detector that looks best in the table, is the only one that sleeps
+through `gradual_shift`.
 
 Alarm rate per archetype on real data, next to the harm rate I measured on the
 same trials ([`reports/real_by_archetype.csv`](reports/real_by_archetype.csv)):
@@ -537,8 +556,10 @@ src/driftharm/
   metrics.py       harm precision/recall/F1/MCC, per-archetype table, three bootstrap schemes
   data.py          IEEE-CIS bundle (train early, hold out late) and the synthetic control
 experiments/       01 prepare, 02 benchmark, 03 tables, 04 calibration sweep,
-                   05 harm-label sensitivity, 06 rank stability and the real-vs-synthetic diagnosis
+                   05 harm-label sensitivity, 06 rank stability and the real-vs-synthetic
+                   diagnosis, 07 the two figures above
 reports/           every CSV/JSON quoted above — tracked on purpose
+reports/figures/   the figures, redrawn from those CSVs by `make figures`
 tests/             45 tests on the generators and metrics
 ```
 

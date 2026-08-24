@@ -2,7 +2,7 @@ PY := .venv/bin/python
 PIP := .venv/bin/pip
 PYTHON312 ?= /Users/salim/.local/bin/python3.12
 
-.PHONY: setup test bench bench-real bench-synthetic prepare analysis clean
+.PHONY: setup test bench bench-real bench-synthetic prepare analysis figures clean
 
 setup:
 	$(PYTHON312) -m venv .venv
@@ -31,6 +31,11 @@ analysis:
 	$(PY) experiments/04_calibration_size.py
 	$(PY) experiments/05_harm_label_sensitivity.py
 	$(PY) experiments/06_ranking_stability.py
+	$(PY) experiments/07_figures.py
+
+# Redraws the README figures from the saved CSVs. Also free.
+figures:
+	$(PY) experiments/07_figures.py
 
 clean:
 	rm -rf artifacts/*.pkl artifacts/*.parquet .pytest_cache
