@@ -60,9 +60,9 @@ outright in several cases: removing `imputation_masked_null` gives Spearman
 
 ![detector order re-forming as each archetype is dropped](reports/figures/ranking-race.gif)
 
-*Each frame drops one of the twelve archetypes and re-ranks the same 240
-trials, so the dots move only because of which archetype is held out, while
-the detectors, the thresholds and the harm labels stay exactly the same.*
+*Each frame holds out one of the twelve archetypes and re-ranks the same 240
+trials. Nothing about the detectors or the harm labels changes, so every swap
+in the order is down to which archetype left.*
 
 ## Real and synthetic disagree no more than one dataset disagrees with itself
 
