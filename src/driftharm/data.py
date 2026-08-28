@@ -8,13 +8,19 @@ from a held-out pool that is strictly later in time than the training data.
 from __future__ import annotations
 
 import json
+import os
 from dataclasses import dataclass, field
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 
-RAW_DIR = Path("/Users/salim/ieee-fraud-ml/data/raw")
+# The IEEE-CIS raw csvs, which live in the sibling repo that trains on them.
+# Overridable so this runs on a machine that keeps them somewhere else.
+RAW_DIR = Path(os.environ.get(
+    "IEEE_FRAUD_RAW",
+    Path(__file__).resolve().parents[3] / "ieee-fraud-ml" / "data" / "raw",
+))
 ARTIFACT_DIR = Path(__file__).resolve().parents[2] / "artifacts"
 
 # How many of the model's top features are monitored, plus how many
