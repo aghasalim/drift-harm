@@ -4,7 +4,7 @@
 A benchmark where the harm label is measured rather than assumed, and the answer
 is that the resulting detector ranking is not stable enough to report.
 
-[![tests](https://img.shields.io/badge/tests-45%20passing-brightgreen.svg)](tests/)
+[![ci](https://github.com/aghasalim/drift-harm/actions/workflows/ci.yml/badge.svg)](https://github.com/aghasalim/drift-harm/actions/workflows/ci.yml)
 [![licence](https://img.shields.io/badge/licence-MIT-blue.svg)](LICENSE)
 
 Twelve failure archetypes are applied to windows drawn from a held-out pool, a
