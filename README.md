@@ -58,6 +58,12 @@ re-ranking moves the order as far as the resampling does and changes the winner
 outright in several cases: removing `imputation_masked_null` gives Spearman
 −0.46 against the full-suite order and makes KS the winner.
 
+![detector order re-forming as each archetype is dropped](reports/figures/ranking-race.gif)
+
+*Each frame drops one of the twelve archetypes and re-ranks the same 240
+trials, so the dots move only because of which archetype is held out, while
+the detectors, the thresholds and the harm labels stay exactly the same.*
+
 ## Real and synthetic disagree no more than one dataset disagrees with itself
 
 The same code on a 60-dimensional correlated-Gaussian control gives a different
