@@ -88,7 +88,7 @@ respect to whether the distribution moved.
 
 Source: [`reports/real_ranking.csv`](../reports/real_ranking.csv),
 [`reports/real_rank_stability.csv`](../reports/real_rank_stability.csv). Both
-intervals are 2,000-draw percentile bootstraps;`P(MCC > 0)` and
+intervals are 2,000-draw percentile bootstraps; `P(MCC > 0)` and
 `P(best of six)` are under the archetype-resampled one.
 
 **Read the fourth column, not the second.** The narrow interval resamples the
@@ -173,8 +173,8 @@ is.
 The direct demonstration: **dropping a single archetype reorders the real
 ranking more than switching datasets does.** Twelve leave-one-out rankings
 ([`reports/real_leave_one_archetype_out.csv`](../reports/real_leave_one_archetype_out.csv)):
-removing`imputation_masked_null` gives Spearman −0.46 against the full-suite
-order and makes KS the winner; removing`dilution_shift` gives 0.67 and makes
+removing `imputation_masked_null` gives Spearman −0.46 against the full-suite
+order and makes KS the winner; removing `dilution_shift` gives 0.67 and makes
 Wasserstein the winner. The other ten leave MMD on top, and five of them leave
 the order completely unchanged. Two archetypes out of twelve carry the result.
 
@@ -196,10 +196,10 @@ Mean |harm-rate difference| across the twelve is 0.204:
 
 The two archetypes the ranking hangs on are the two the datasets disagree about
 most, and MMD's first place on real data is built out of exactly those two: it
-is one of only two detectors that catch`imputation_masked_null` (20/20, against
-KS and PSI's 0/20) and the only one that stays quiet on`dilution_shift`, which
+is one of only two detectors that catch `imputation_masked_null` (20/20, against
+KS and PSI's 0/20) and the only one that stays quiet on `dilution_shift`, which
 the aggregate harm rule scores as harmless (0.05). Neither holds on synthetic
-there everyone catches the masked null, and`dilution_shift` is harmful in
+there everyone catches the masked null, and `dilution_shift` is harmful in
 20/20 replicates, so declining to fire on it is a miss rather than a saved false
 alarm.
 
@@ -218,8 +218,8 @@ datasets*
 
 Identical footprint, opposite verdict, because the *null floors* differ. On
 IEEE-CIS the max-over-columns KS null is set by columns that are already mostly
-missing before any archetype touches them:`id_02` is 81.3% NaN (effective n
-3,736 per window) and produces a null KS of 0.0251 on its own;`D8` is 89.8%
+missing before any archetype touches them: `id_02` is 81.3% NaN (effective n
+3,736 per window) and produces a null KS of 0.0251 on its own; `D8` is 89.8%
 NaN; 19 of the 60 monitored columns are above 80% NaN
 ([`reports/real_null_floor_by_column.csv`](../reports/real_null_floor_by_column.csv)).
 Masking a dense column to 10% produces the same effective sample size those
@@ -286,12 +286,12 @@ luck is exactly what the confidence intervals above refuse to settle.
 ![measured harm against detector alarms, per archetype](../reports/figures/archetype-breakdown.png)
 
 The two blocks are the whole argument. Harm and alarms line up on the easy
-archetypes and come apart everywhere interesting.`concept_drift_no_covariate_shift`
+archetypes and come apart everywhere interesting. `concept_drift_no_covariate_shift`
 does harm every time and not one of the six notices, because by construction the
-covariates do not move.`irrelevant_feature_drift` does no harm and all six fire.
+covariates do not move. `irrelevant_feature_drift` does no harm and all six fire.
 `imputation_masked_null` harms every time and only MMD and C2ST see it. Note also
 that MMD, the detector that looks best in the table, is the only one that sleeps
-through`gradual_shift`.
+through `gradual_shift`.
 
 Alarm rate per archetype on real data, next to the harm rate I measured on the
 same trials ([`reports/real_by_archetype.csv`](../reports/real_by_archetype.csv)):
@@ -330,7 +330,7 @@ drop is 0.033 against a null threshold of 0.021, and two thirds of replicates
 clear it. Preserving the conditional is not sufficient for a fixed model to
 survive: a tree fitted on the training density degrades when the query density
 moves far enough into its sparse regions. I have left the archetype's
-`expected_harm` flag at`False` and let the disagreement stand in the artifacts,
+`expected_harm` flag at `False` and let the disagreement stand in the artifacts,
 because the disagreement is the result.
 
 **Concept drift is the largest harm in the suite and nearly invisible.** Flipping
@@ -344,7 +344,7 @@ the suite so the blind spot has a number attached.
 `imputation_masked_null` nulls 90% of the values in the six highest-importance
 columns; serving imputes the reference median, so the model loses the
 information and the harm rate is 1.00. The univariate detectors drop non-finite
-values before comparing, which is what`scipy.stats.ks_2samp` and every PSI
+values before comparing, which is what `scipy.stats.ks_2samp` and every PSI
 implementation I have read do, so they compare the surviving values against a
 reference whose shape has not changed: KS 0/20, PSI 0/20. MMD and C2ST catch
 20/20, but only because they must impute before they can compute anything, so
@@ -371,7 +371,7 @@ does not reach 6/6 until batch 5, by which point the mean AUC drop is 0.129.
 On the synthetic bundle, where the gradual arm's harm rate rises from 0.33 at
 batch 1 to 1.00 by batch 3, MMD again lags to batch 5 while PSI and JS are at
 1.00 by batch 2. MMD's top score on real data is bought partly with
-insensitivity: it declines the`dilution_shift` false alarms that cost the other
+insensitivity: it declines the `dilution_shift` false alarms that cost the other
 five (0/19 versus 12 to 19/19) and pays for it by missing 19/20 gradual trials.
 
 ## 3. Instrument findings
@@ -394,7 +394,7 @@ for both. So the detectors that fire on dilution are being charged for false
 alarms on trials where the model is badly damaged inside the segment an operator
 would actually care about.
 
-Re-scoring with`harm = aggregate OR segment` inverts the ranking
+Re-scoring with `harm = aggregate OR segment` inverts the ranking
 ([`reports/real_ranking_segment_aware.csv`](../reports/real_ranking_segment_aware.csv)):
 
 | detector | MCC (headline) | MCC (segment-aware) |
@@ -471,7 +471,7 @@ then forces their reported gain importance to zero, so that
 matrix is block-correlated (`cov = A Aᵀ + I`), so the zero-weight columns carry
 information about the informative ones, and the fitted LightGBM puts **3.6% of
 its total split gain** on them. Shifting them therefore does move predictions:
-the measured harm rate for`irrelevant_feature_drift` on synthetic is **0.35**,
+the measured harm rate for `irrelevant_feature_drift` on synthetic is **0.35**,
 not the ~0.05 the design intended.
 
 The real bundle does not have this problem, its zero-gain columns produce a
@@ -485,7 +485,7 @@ Fixing this needs an independent-covariance synthetic bundle, which I did not ru
 C2ST has the best harm-F1 on real data (0.654) and comes second on MCC (0.089),
 because F1 ignores true negatives and C2ST buys its 0.831 recall with 88 false
 positives and a specificity of 0.241. MCC responds to the whole table, which is
-why it is the scoring column. Both are in`reports/`.
+why it is the scoring column. Both are in `reports/`.
 
 ## 4. Limitations
 
@@ -506,7 +506,7 @@ why it is the scoring column. Both are in`reports/`.
   1,500-row MMD subsample, 8,000-row C2ST subsample with a 120-tree LightGBM
   discriminator. A detector may look bad here because of a setting rather than
   because of the method.
-- **Aggregation over columns is`max`, always.** The four univariate detectors
+- **Aggregation over columns is `max`, always.** The four univariate detectors
   alert if any monitored feature drifts. Mean, or a top-k rule, or a
   multiple-testing correction would each give different numbers. I did not
   measure them.
@@ -603,11 +603,11 @@ make bench-synthetic      # synthetic run end to end (~24 min on an M-series lap
 make analysis             # regenerate every table above from reports/*.csv (free)
 ```
 
-The real run needs the IEEE-CIS`train_transaction.csv` and`train_identity.csv`
+The real run needs the IEEE-CIS `train_transaction.csv` and `train_identity.csv`
 from the [Kaggle competition](https://www.kaggle.com/c/ieee-fraud-detection/data)
-in`~/ieee-fraud-ml/data/raw/` (path set by`RAW_DIR` in`src/driftharm/data.py`);
-then`make bench-real`. It trains a fresh LightGBM on the earliest 40% of the
-stream by`TransactionDT` (236,216 rows) and holds out the remaining 354,324
+in `~/ieee-fraud-ml/data/raw/` (path set by `RAW_DIR` in `src/driftharm/data.py`);
+then `make bench-real`. It trains a fresh LightGBM on the earliest 40% of the
+stream by `TransactionDT` (236,216 rows) and holds out the remaining 354,324
 the model in my earlier repo was fitted on all 590,540 rows, so it is in-sample
 everywhere and its AUC cannot degrade, which makes it useless as a harm
 instrument. Held-out AUC is 0.891 on all 431 features and 0.857 through the
@@ -637,8 +637,8 @@ tests/             45 tests on the generators and metrics
 ```
 
 The tests check invariants of the instrument, not that it runs: that
-`concept_drift` leaves the input matrix bit-identical, that`dilution_permuted`
-preserves every marginal exactly, that`irrelevant_feature_drift` touches only
+`concept_drift` leaves the input matrix bit-identical, that `dilution_permuted`
+preserves every marginal exactly, that `irrelevant_feature_drift` touches only
 zero-importance columns, that covariate shift draws only real rows, that MCC
 matches scikit-learn, that an always-alarm detector scores zero MCC despite
 perfect recall, that a threshold fitted on one null half holds its false-alarm
@@ -659,5 +659,5 @@ Same twelve archetype names, two datasets, different experiments
 ([`reports/archetype_disagreement.csv`](reports/archetype_disagreement.csv)).
 Mean |harm-rate difference| across the twelve is 0.204:
 
-Re-scoring with`harm = aggregate OR segment` inverts the ranking
+Re-scoring with `harm = aggregate OR segment` inverts the ranking
 ([`reports/real_ranking_segment_aware.csv`](reports/real_ranking_segment_aware.csv)):
