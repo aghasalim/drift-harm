@@ -652,12 +652,12 @@ MIT licensed.
 
 Paragraphs kept from the earlier, longer README.
 
-Everything below comes from a file in [`reports/`](reports/). Where I did not
+Everything below comes from a file in [`reports/`](../reports/). Where I did not
 measure something, I say so.
 
 Same twelve archetype names, two datasets, different experiments
-([`reports/archetype_disagreement.csv`](reports/archetype_disagreement.csv)).
+([`reports/archetype_disagreement.csv`](../reports/archetype_disagreement.csv)).
 Mean |harm-rate difference| across the twelve is 0.204:
 
 Re-scoring with `harm = aggregate OR segment` inverts the ranking
-([`reports/real_ranking_segment_aware.csv`](reports/real_ranking_segment_aware.csv)):
+([`reports/real_ranking_segment_aware.csv`](../reports/real_ranking_segment_aware.csv)):
