@@ -58,6 +58,7 @@ jobs:
           gcc --version | head -1
           go version
           cargo --version
+          node --version
           Rscript --version
 
       - name: Recompute the published ranking in every language
@@ -77,5 +78,21 @@ jobs:
           fi
           echo "rejected the corrupted ranking, as it should"
           cp /tmp/rank.bak reports/real_ranking.csv
+          ./verify/verify.sh > /dev/null
+
+      # The same for the table behind the leave-one-archetype-out claim, which
+      # only the JavaScript check reads.
+      - name: The harness rejects a corrupted leave-one-archetype-out table
+        run: |
+          cp reports/real_leave_one_archetype_out.csv /tmp/loo.bak
+          sed -i "s/^dilution_shift,wasserstein,/dilution_shift,mmd,/" reports/real_leave_one_archetype_out.csv
+          if ./verify/verify.sh > /tmp/corrupt2.log 2>&1; then
+            echo "the harness passed on a corrupted leave-one-archetype-out table"
+            cat /tmp/corrupt2.log
+            cp /tmp/loo.bak reports/real_leave_one_archetype_out.csv
+            exit 1
+          fi
+          echo "rejected the corrupted table, as it should"
+          cp /tmp/loo.bak reports/real_leave_one_archetype_out.csv
           ./verify/verify.sh > /dev/null
 

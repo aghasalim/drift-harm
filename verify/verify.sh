@@ -62,6 +62,7 @@ run "C, metric kernel"        cc      check_c
 run "Go, file validation"     go      check_go
 run "R, statistical inference" Rscript Rscript verify/verify.R "$root"
 run "Rust, bootstrap error"   cargo   check_rust
+run "JS, leave one archetype out" node    node verify/loo.js "$root"
 
 printf '\n%s\n' "----------------------------------------"
 printf '%d passed, %d failed, %d skipped\n' "$pass" "$fail" "$skip"

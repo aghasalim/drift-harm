@@ -207,8 +207,8 @@ everything downstream reads the same output. The tests checked that the code ran
 not that it was right.
 
 So the published ranking is recomputed from the trial level data in
-[`reports/real_trials.csv`](reports/real_trials.csv) by four more
-implementations, in four languages, and CI fails if any two disagree. An
+[`reports/real_trials.csv`](reports/real_trials.csv) by five more
+implementations, in five languages, and CI fails if any two disagree. An
 arithmetic mistake would have to be made identically in all of them to survive.
 
 | implementation | what it recomputes | agreement |
@@ -218,6 +218,7 @@ arithmetic mistake would have to be made identically in all of them to survive.
 | [`verify/gocheck`](verify/gocheck) | the ranking, plus structural validation of all 29 files under `reports/` | exact, 0.0e+00 |
 | [`verify/verify.R`](verify/verify.R) | the point estimates and both bootstrap schemes, base R, own generator | exact; widths within 1.4% |
 | [`verify/bootstrap`](verify/bootstrap) | how much of the published interval is Monte Carlo noise | see below |
+| [`verify/loo.js`](verify/loo.js) | the twelve leave-one-archetype-out rankings and their Spearman correlations | exact, worst gap 1.1e-16 |
 
 Run them all with [`./verify/verify.sh`](verify/verify.sh). Each is skipped with a
 message if its toolchain is missing, so a partial install still runs the rest.
@@ -236,12 +237,22 @@ resampling. Every published width lands within 4 sd of a 100,000 draw reference,
 so 2000 draws was enough for the claim made from it. That was an assumption
 before.
 
+**The JavaScript checks the claim the figure is drawn from.** The leave-one-out
+table is what the README's `-0.46` and the ranking-race gif both rest on, and it
+came out of the same pandas run as everything else. Node recomputes all twelve
+drops from the trial data, with its own Spearman, and reproduces the six MCCs,
+the winner and the correlation in every row, worst gap 1.1e-16. It also requires
+the prose claim, KS winning at Spearman -0.46 without `imputation_masked_null`,
+to still match the table it was written from.
+
 **The harness is itself checked.** CI corrupts `reports/real_ranking.csv`,
 requires the harness to reject it, restores it, and requires a pass. A check that
 cannot fail is not evidence. Each implementation catches what it is responsible
 for and nothing more: nudging a published MCC is caught by SQL, C, Go and R;
 altering one confusion matrix cell is caught by SQL and C; halving the interval
-widths is caught by R and by Rust at 30 standard deviations.
+widths is caught by R and by Rust at 30 standard deviations; renaming the winner
+of one leave-one-archetype-out row, or flipping a single alarm bit in the trial
+data, is caught by the JavaScript.
 
 ## Reproducing
 
