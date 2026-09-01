@@ -33,3 +33,49 @@ jobs:
       # same objects the real run uses.
       - name: Test
         run: pytest -q
+
+  # Every number in the README is produced by pandas. If the aggregation in
+  # experiments/03_tables.py were wrong, nothing downstream would notice,
+  # because every table and figure reads the same output. These recompute the
+  # published ranking from the trial level data in four other languages and
+  # require agreement. Each toolchain below is already on the runner image
+  # except R, so this adds build time rather than install time.
+  cross-language:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install R if the image does not carry it
+        run: |
+          command -v Rscript >/dev/null || {
+            sudo apt-get update && sudo apt-get install -y --no-install-recommends r-base-core
+          }
+          Rscript --version
+
+      - name: Versions
+        run: |
+          sqlite3 --version | cut -d" " -f1
+          gcc --version | head -1
+          go version
+          cargo --version
+          Rscript --version
+
+      - name: Recompute the published ranking in every language
+        run: ./verify/verify.sh
+
+      # A check that cannot fail is not evidence. Corrupt the published table,
+      # require the harness to reject it, then put it back and require a pass.
+      - name: The harness rejects a corrupted results file
+        run: |
+          cp reports/real_ranking.csv /tmp/rank.bak
+          sed -i "s/^mmd,0.18897136306247203,/mmd,0.18997136306247203,/" reports/real_ranking.csv
+          if ./verify/verify.sh > /tmp/corrupt.log 2>&1; then
+            echo "the harness passed on a corrupted ranking"
+            cat /tmp/corrupt.log
+            cp /tmp/rank.bak reports/real_ranking.csv
+            exit 1
+          fi
+          echo "rejected the corrupted ranking, as it should"
+          cp /tmp/rank.bak reports/real_ranking.csv
+          ./verify/verify.sh > /dev/null
+

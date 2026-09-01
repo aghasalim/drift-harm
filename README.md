@@ -198,6 +198,51 @@ things DriftHarm adds on top of it are listed in
 
 If you want the reliable version of the argument, read those.
 
+## Everything here is computed twice
+
+Every number in this README comes out of pandas, in
+[`experiments/03_tables.py`](experiments/03_tables.py). So does every figure. If
+that aggregation were wrong, nothing downstream would catch it, because
+everything downstream reads the same output. The tests checked that the code ran,
+not that it was right.
+
+So the published ranking is recomputed from the trial level data in
+[`reports/real_trials.csv`](reports/real_trials.csv) by four more
+implementations, in four languages, and CI fails if any two disagree. An
+arithmetic mistake would have to be made identically in all of them to survive.
+
+| implementation | what it recomputes | agreement |
+| --- | --- | --- |
+| [`verify/ranking.sql`](verify/ranking.sql) | the confusion matrix and all six metrics, in SQLite | exact to 1e-10 |
+| [`verify/mcc.c`](verify/mcc.c) | the metric kernel, resolving columns by name | exact, 0.0e+00 |
+| [`verify/gocheck`](verify/gocheck) | the ranking, plus structural validation of all 29 files under `reports/` | exact, 0.0e+00 |
+| [`verify/verify.R`](verify/verify.R) | the point estimates and both bootstrap schemes, base R, own generator | exact; widths within 1.4% |
+| [`verify/bootstrap`](verify/bootstrap) | how much of the published interval is Monte Carlo noise | see below |
+
+Run them all with [`./verify/verify.sh`](verify/verify.sh). Each is skipped with a
+message if its toolchain is missing, so a partial install still runs the rest.
+
+**R reaches the same conclusion independently.** Base R, its own generator, 4000
+draws against the Python's 2000: point MCC matches exactly, mean interval width
+0.2555 against the published 0.2520 for trial resampling and 0.9728 against
+0.9870 for archetype resampling, and the widening is 3.81x against 3.92x. The
+claim this repository is built on does not depend on the pandas code being right.
+
+**The Rust answers a question that was never asked.** The published intervals are
+2000 draw Monte Carlo estimates, so they carry their own error, and nothing here
+had measured it. Running 30 independent 2000 draw bootstraps puts that error at
+sd 0.005 to 0.006 for trial resampling and 0.014 to 0.017 for archetype
+resampling. Every published width lands within 4 sd of a 100,000 draw reference,
+so 2000 draws was enough for the claim made from it. That was an assumption
+before.
+
+**The harness is itself checked.** CI corrupts `reports/real_ranking.csv`,
+requires the harness to reject it, restores it, and requires a pass. A check that
+cannot fail is not evidence. Each implementation catches what it is responsible
+for and nothing more: nudging a published MCC is caught by SQL, C, Go and R;
+altering one confusion matrix cell is caught by SQL and C; halving the interval
+widths is caught by R and by Rust at 30 standard deviations.
+
 ## Reproducing
 
 ```bash
