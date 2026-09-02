@@ -63,6 +63,8 @@ run "Go, file validation"     go      check_go
 run "R, statistical inference" Rscript Rscript verify/verify.R "$root"
 run "Rust, bootstrap error"   cargo   check_rust
 run "JS, leave one archetype out" node    node verify/loo.js "$root"
+run "Python, derived metrics"    python3 python3 verify/metrics.py "$root"
+run "Ruby, leave one archetype out" ruby   ruby verify/loo.rb "$root"
 
 printf '\n%s\n' "----------------------------------------"
 printf '%d passed, %d failed, %d skipped\n' "$pass" "$fail" "$skip"
