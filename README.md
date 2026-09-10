@@ -50,7 +50,7 @@ intervals are 2,000-draw percentile bootstraps.
 72 (detector × archetype) cells the alarm rate is exactly 0.00 or 1.00.
 Harm-precision runs 0.512 to 0.593 against a base rate of 0.517, so being told a
 detector fired moves my belief that the model is damaged by between −0.5 and
-+7.6 percentage points. That is the result. Full argument in
++7.6 percentage points. That is the result. The argument for it runs at length in
 [notes/METHODS.md](notes/METHODS.md#21-the-detector-ranking-is-not-stable).
 
 ![rank correlation when one archetype is dropped](reports/figures/leave-one-archetype-out.png)
@@ -82,7 +82,7 @@ not a property of the detector, it is a property of how much missingness the
 reference table already had. The masked-null footprint is the same size on both
 datasets, yet KS alarms 0/20 on real and 20/20 on synthetic, because 19 of the
 60 monitored real columns are above 80% NaN and set the null floor themselves.
-Derivation, footprint and null-floor tables in
+Derivation, footprint and null-floor tables:
 [notes/METHODS.md](notes/METHODS.md#222-what-is-genuinely-different-and-it-is-those-same-two-archetypes).
 
 ## Where the errors come from
@@ -99,8 +99,7 @@ use. `imputation_masked_null` harms every time and only MMD and C2ST see it;
 pointing the monitor at the post-imputation table takes KS and PSI from 0/20 to
 20/20, so changing which table the monitor reads bought more recall than
 changing the detector did. Covariate shift I had labelled harmless, and its
-three strengths measured harm rates of 0.10, 0.25 and 0.65. The per-archetype
-table is in
+three strengths measured harm rates of 0.10, 0.25 and 0.65. Per-archetype table:
 [notes/METHODS.md](notes/METHODS.md#23-where-the-errors-actually-come-from).
 
 ![harm accumulating against detector alarms along a gradual drift](reports/figures/gradual-drift.png)
@@ -114,8 +113,8 @@ misses 19/20 gradual trials in the headline run.
 ## Instrument findings
 
 Four things I found wrong with the measuring apparatus, kept here rather than
-fixed in silence. Each is worked through in
-[notes/METHODS.md](notes/METHODS.md#3-instrument-findings).
+fixed in silence. Each is worked through under
+[instrument findings](notes/METHODS.md#3-instrument-findings).
 
 - **The harm label is blind to segment damage, and the ranking depends on it.**
   Both dilution archetypes confine their damage to the top 3% of rows by
@@ -146,10 +145,10 @@ where essentially all of the uncertainty lives: more replicates cannot fix it,
 more archetypes might. Detector hyperparameters are fixed and not swept,
 aggregation over columns is always `max`, window size is fixed at 20,000 rows,
 and harm is a binary AUC drop rather than calibration, precision at an operating
-threshold, or money. Full list in
-[notes/METHODS.md](notes/METHODS.md#4-limitations).
+threshold, or money. The exhaustive list lives under
+[limitations](notes/METHODS.md#4-limitations).
 
-## 5. Related work
+## Related work, and what is actually new here
 
 I need to be precise about what is new here, because the headline observation is
 not.
@@ -163,8 +162,8 @@ was suggestive rather than conclusive. It also identified the dropped-NaN blind
 spot and the invisibility of label shift to input monitors.
 
 So **"drift ≠ harm" is the premise of this repo, not its finding.** The five
-things DriftHarm adds on top of it are listed in
-[notes/METHODS.md](notes/METHODS.md#5-related-work).
+things DriftHarm adds on top of it are enumerated under
+[related work](notes/METHODS.md#5-related-work).
 
 **Prior art I checked and confirmed:**
 
@@ -215,10 +214,10 @@ in `~/ieee-fraud-ml/data/raw/`, then `make bench-real`. It trains a fresh
 LightGBM on the earliest 40% of the stream by `TransactionDT` and holds out the
 rest; held-out AUC is 0.891 on all 431 features and 0.857 through the 60
 monitored columns the benchmark drives. CI runs the tests on the synthetic
-bundle only, so it never needs the 700 MB download. Details in
-[notes/METHODS.md](notes/METHODS.md#6-reproducibility).
+bundle only, so it never needs the 700 MB download. Details under
+[reproducibility](notes/METHODS.md#6-reproducibility).
 
-## Repository layout
+## Map of the repository
 
 ```
 src/driftharm/     six detectors, the twelve archetypes, harm labels, null
@@ -231,15 +230,12 @@ tests/             45 tests on the generators and metrics
 notes/METHODS.md   the full write-up this page summarises
 ```
 
-File-by-file notes and what the tests actually assert are in
-[notes/METHODS.md](notes/METHODS.md#7-repository-layout).
+File-by-file notes and what the tests actually assert sit under
+[repository layout](notes/METHODS.md#7-repository-layout).
 
 MIT licensed.
 
-## References
-
-The papers and sources this implementation follows. Each one is here because
-the code uses the method, the dataset or the metric it describes.
+## The four sources this is built on
 
 - **Rabanser, Günnemann, Lipton. Failing Loudly: An Empirical Study of Methods for Detecting Dataset Shift. NeurIPS 2019.** [arXiv:1810.11953](https://arxiv.org/abs/1810.11953) the detector comparison protocol this follows.
 - **Gretton, Borgwardt, Rasch, Schölkopf, Smola. A Kernel Two-Sample Test. JMLR 13, 2012.** the MMD detector.
