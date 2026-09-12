@@ -64,7 +64,7 @@ jobs:
       - name: Recompute the published ranking in every language
         run: ./verify/verify.sh
 
-      # A check that cannot fail is not evidence. Corrupt the published table,
+      # A check that cannot fail is not a check. Corrupt the published table,
       # require the harness to reject it, then put it back and require a pass.
       - name: The harness rejects a corrupted results file
         run: |
