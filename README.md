@@ -116,21 +116,24 @@ Four things I found wrong with the measuring apparatus, kept here rather than
 fixed in silence. Each is worked through under
 [instrument findings](notes/METHODS.md#3-instrument-findings).
 
-- **The harm label is blind to segment damage, and the ranking depends on it.**
-  Both dilution archetypes confine their damage to the top 3% of rows by
-  predicted risk, so the aggregate rule scores them harmless. Re-scoring with
-  `harm = aggregate OR segment` sends MMD from first to last, 0.189 to −0.216,
-  and C2ST from second to first.
-- **Threshold calibration needs more null replicates than I first used.** At 20
-  null replicates every detector overshoots the 5% target by roughly double. The
-  benchmark now uses 300, split 150 for calibration and 150 held out.
-- **The synthetic bundle's "irrelevant" features are not causally irrelevant.**
-  The fitted LightGBM puts 3.6% of its split gain on the zero-weight columns, so
-  the measured harm rate for that archetype on synthetic is 0.35, not the ~0.05
-  the design intended. The real bundle does not have this problem.
-- **MCC over F1.** C2ST has the best harm-F1 on real data, 0.654, and buys its
-  0.831 recall with 88 false positives and a specificity of 0.241. MCC responds
-  to the whole table, which is why it is the scoring column.
+**The harm label is blind to segment damage, and the ranking depends on it.**
+Both dilution archetypes confine their damage to the top 3% of rows by
+predicted risk, so the aggregate rule scores them harmless. Re-scoring with
+`harm = aggregate OR segment` sends MMD from first to last, 0.189 to −0.216,
+and C2ST from second to first.
+
+**Threshold calibration needs more null replicates than I first used.** At 20
+null replicates every detector overshoots the 5% target by roughly double. The
+benchmark now uses 300, split 150 for calibration and 150 held out.
+
+**The synthetic bundle's "irrelevant" features are not causally irrelevant.**
+The fitted LightGBM puts 3.6% of its split gain on the zero-weight columns, so
+the measured harm rate for that archetype on synthetic is 0.35, not the ~0.05
+the design intended. The real bundle does not have this problem.
+
+**MCC over F1.** C2ST has the best harm-F1 on real data, 0.654, and buys its
+0.831 recall with 88 false positives and a specificity of 0.241. MCC responds
+to the whole table, which is why it is the scoring column.
 
 Realised false-alarm rate against calibration sample size:
 
