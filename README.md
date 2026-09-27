@@ -6,6 +6,7 @@ is that the resulting detector ranking is not stable enough to report.
 
 [![ci](https://github.com/aghasalim/drift-harm/actions/workflows/ci.yml/badge.svg)](https://github.com/aghasalim/drift-harm/actions/workflows/ci.yml)
 [![licence](https://img.shields.io/badge/licence-MIT-blue.svg)](LICENSE)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23003618.svg)](https://doi.org/10.5281/zenodo.23003618)
 
 Twelve failure archetypes are applied to windows drawn from a held-out pool, a
 model that has seen neither window scores both, and the drop in its AUC, measured
