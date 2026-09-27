@@ -1,7 +1,7 @@
 # DriftHarm
 
 Do drift detectors tell you the model got worse?
-A benchmark where the harm label is measured instead of assumed, and the answer
+A benchmark where the harm label is measured, and the answer
 is that the resulting detector ranking is not stable enough to report.
 
 [![ci](https://github.com/aghasalim/drift-harm/actions/workflows/ci.yml/badge.svg)](https://github.com/aghasalim/drift-harm/actions/workflows/ci.yml)
@@ -143,12 +143,11 @@ Realised false-alarm rate against calibration sample size:
 
 One real dataset (IEEE-CIS, tabular fraud, 3.7% positive rate) and one synthetic
 generator; nothing here has been checked on text, images or time series. The
-twelve archetypes are my taxonomy instead of an exhaustive one, and that is
+twelve archetypes are my own taxonomy, far from exhaustive, and that is
 where essentially all of the uncertainty lives: more replicates cannot fix it,
 more archetypes might. Detector hyperparameters are fixed and not swept,
 aggregation over columns is always `max`, window size is fixed at 20,000 rows,
-and harm is a binary AUC drop instead of calibration, precision at an operating
-threshold, or money. The exhaustive list lives under
+and harm is a binary AUC drop; calibration, precision at an operating threshold and money are not measured. The exhaustive list lives under
 [limitations](notes/METHODS.md#4-limitations).
 
 ## Related work, and what is actually new here
@@ -175,8 +174,7 @@ things DriftHarm adds on top of it are enumerated under
   performance estimation should replace drift as the primary signal. Their
   ["Don't let yourself be fooled by data drift"](https://www.nannyml.com/blog/when-data-drift-does-not-affect-performance-machine-learning-models)
   post demonstrates it on a single dataset (Tetouan City power consumption)
-  comparing univariate drift against their DLE performance estimator. It is a
-  demonstration rather than a benchmark: it does not rank detectors and does not
+  comparing univariate drift against their DLE performance estimator. It is a demonstration, not a benchmark: it does not rank detectors and does not
   report false-alarm or precision/recall statistics for drift alerts. The
   argument is theirs; the measurement here is not the same measurement.
 - **Singh, "When Drift Detectors cry Wolf: False Alarm Rates in continuous ML
