@@ -1,7 +1,7 @@
 # DriftHarm
 
-**Do drift detectors tell you the model got worse?**
-A benchmark where the harm label is measured rather than assumed, and the answer
+Do drift detectors tell you the model got worse?
+A benchmark where the harm label is measured instead of assumed, and the answer
 is that the resulting detector ranking is not stable enough to report.
 
 [![ci](https://github.com/aghasalim/drift-harm/actions/workflows/ci.yml/badge.svg)](https://github.com/aghasalim/drift-harm/actions/workflows/ci.yml)
@@ -21,7 +21,7 @@ recomputed from the trial level data by the independent implementations in
 ## The headline result
 
 Under trial-level resampling MMD appears to win (MCC 0.189, 95% CI
-[0.061, 0.315]). Under archetype-level resampling, the honest choice when twelve
+[0.061, 0.315]). Under archetype-level resampling, the right choice when twelve
 failure modes are the population of interest, the mean interval width grows from
 0.25 to 0.99, every interval covers zero, and the ordering carries no
 information.
@@ -45,7 +45,7 @@ Source: [`reports/real_ranking.csv`](reports/real_ranking.csv),
 [`reports/real_rank_stability.csv`](reports/real_rank_stability.csv). Both
 intervals are 2,000-draw percentile bootstraps.
 
-**Read the fourth column, not the second.** The narrow interval resamples the
+Read the fourth column, not the second. The narrow interval resamples the
 240 trials as if they were 240 independent facts, and they are not: in 53 of the
 72 (detector × archetype) cells the alarm rate is exactly 0.00 or 1.00.
 Harm-precision runs 0.512 to 0.593 against a base rate of 0.517, so being told a
@@ -112,26 +112,26 @@ misses 19/20 gradual trials in the headline run.
 
 ## Instrument findings
 
-Four things I found wrong with the measuring apparatus, kept here rather than
+Four things I found wrong with the measuring apparatus, kept here, not
 fixed in silence. Each is worked through under
 [instrument findings](notes/METHODS.md#3-instrument-findings).
 
-**The harm label is blind to segment damage, and the ranking depends on it.**
+The harm label is blind to segment damage, and the ranking depends on it.
 Both dilution archetypes confine their damage to the top 3% of rows by
 predicted risk, so the aggregate rule scores them harmless. Re-scoring with
 `harm = aggregate OR segment` sends MMD from first to last, 0.189 to −0.216,
 and C2ST from second to first.
 
-**Threshold calibration needs more null replicates than I first used.** At 20
+Threshold calibration needs more null replicates than I first used. At 20
 null replicates every detector overshoots the 5% target by roughly double. The
 benchmark now uses 300, split 150 for calibration and 150 held out.
 
-**The synthetic bundle's "irrelevant" features are not causally irrelevant.**
+The synthetic bundle's "irrelevant" features are not causally irrelevant.
 The fitted LightGBM puts 3.6% of its split gain on the zero-weight columns, so
 the measured harm rate for that archetype on synthetic is 0.35, not the ~0.05
 the design intended. The real bundle does not have this problem.
 
-**MCC over F1.** C2ST has the best harm-F1 on real data, 0.654, and buys its
+MCC over F1. C2ST has the best harm-F1 on real data, 0.654, and buys its
 0.831 recall with 88 false positives and a specificity of 0.241. MCC responds
 to the whole table, which is why it is the scoring column.
 
@@ -143,11 +143,11 @@ Realised false-alarm rate against calibration sample size:
 
 One real dataset (IEEE-CIS, tabular fraud, 3.7% positive rate) and one synthetic
 generator; nothing here has been checked on text, images or time series. The
-twelve archetypes are my taxonomy rather than an exhaustive one, and that is
+twelve archetypes are my taxonomy instead of an exhaustive one, and that is
 where essentially all of the uncertainty lives: more replicates cannot fix it,
 more archetypes might. Detector hyperparameters are fixed and not swept,
 aggregation over columns is always `max`, window size is fixed at 20,000 rows,
-and harm is a binary AUC drop rather than calibration, precision at an operating
+and harm is a binary AUC drop instead of calibration, precision at an operating
 threshold, or money. The exhaustive list lives under
 [limitations](notes/METHODS.md#4-limitations).
 
@@ -161,7 +161,7 @@ is mine and already showed that drift alerts do not track performance loss. It
 monitored KS, PSI and missing-rate over eight windows of IEEE-CIS traffic and
 found prediction PSI correlating −0.709 with AUC loss, prediction stability
 looking best exactly where the model was worst, and noted, with n = 8, that this
-was suggestive rather than conclusive. It also identified the dropped-NaN blind
+was suggestive, not conclusive. It also identified the dropped-NaN blind
 spot and the invisibility of label shift to input monitors.
 
 So **"drift ≠ harm" is the premise of this repo, not its finding.** The five
