@@ -45,7 +45,7 @@ Source: [`reports/real_ranking.csv`](reports/real_ranking.csv),
 [`reports/real_rank_stability.csv`](reports/real_rank_stability.csv). Both
 intervals are 2,000-draw percentile bootstraps.
 
-Read the fourth column, not the second. The narrow interval resamples the
+Read the fourth column. The narrow interval resamples the
 240 trials as if they were 240 independent facts, and they are not: in 53 of the
 72 (detector × archetype) cells the alarm rate is exactly 0.00 or 1.00.
 Harm-precision runs 0.512 to 0.593 against a base rate of 0.517, so being told a
@@ -112,8 +112,7 @@ misses 19/20 gradual trials in the headline run.
 
 ## Instrument findings
 
-Four things I found wrong with the measuring apparatus, kept here, not
-fixed in silence. Each is worked through under
+Four things I found wrong with the measuring apparatus, kept here. Each is worked through under
 [instrument findings](notes/METHODS.md#3-instrument-findings).
 
 The harm label is blind to segment damage, and the ranking depends on it.
@@ -159,8 +158,7 @@ not.
 is mine and already showed that drift alerts do not track performance loss. It
 monitored KS, PSI and missing-rate over eight windows of IEEE-CIS traffic and
 found prediction PSI correlating −0.709 with AUC loss, prediction stability
-looking best exactly where the model was worst, and noted, with n = 8, that this
-was suggestive, not conclusive. It also identified the dropped-NaN blind
+looking best exactly where the model was worst, and noted, with n = 8, that this was only suggestive. It also identified the dropped-NaN blind
 spot and the invisibility of label shift to input monitors.
 
 So **"drift ≠ harm" is the premise of this repo, not its finding.** The five
@@ -174,7 +172,7 @@ things DriftHarm adds on top of it are enumerated under
   performance estimation should replace drift as the primary signal. Their
   ["Don't let yourself be fooled by data drift"](https://www.nannyml.com/blog/when-data-drift-does-not-affect-performance-machine-learning-models)
   post demonstrates it on a single dataset (Tetouan City power consumption)
-  comparing univariate drift against their DLE performance estimator. It is a demonstration, not a benchmark: it does not rank detectors and does not
+  comparing univariate drift against their DLE performance estimator. It is a demonstration: it does not rank detectors and does not
   report false-alarm or precision/recall statistics for drift alerts. The
   argument is theirs; the measurement here is not the same measurement.
 - **Singh, "When Drift Detectors cry Wolf: False Alarm Rates in continuous ML
