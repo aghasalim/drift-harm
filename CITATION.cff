@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+message: If you use this work, please cite it as below.
+title: "DriftHarm"
+abstract: "Six data-drift detectors scored on whether their alarms line up with measured drops in model accuracy."
+type: software
+authors:
+  - family-names: Mustafazada
+    given-names: Aghasalim
+    orcid: "https://orcid.org/0009-0001-8746-4582"
+    affiliation: "Howest University of Applied Sciences"
+repository-code: "https://github.com/aghasalim/drift-harm"
+url: "https://aghasalim.github.io/"
+license: MIT
+keywords:
+  - drift detection
+  - fraud detection
+  - lightgbm
+  - machine learning
+  - model evaluation
+  - model monitoring
