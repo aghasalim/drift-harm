@@ -47,7 +47,7 @@ class Archetype:
 ARCHETYPES: dict[str, Archetype] = {}
 
 
-def archetype(name, expected_harm, expected_alarm, description):
+def archetype(name: str, expected_harm: bool, expected_alarm: str, description: str):
     def deco(fn):
         ARCHETYPES[name] = Archetype(name, expected_harm, expected_alarm, description, fn)
         return fn
