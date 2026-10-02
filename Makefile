@@ -1,6 +1,6 @@
 PY := .venv/bin/python
 PIP := .venv/bin/pip
-PYTHON312 ?= /Users/salim/.local/bin/python3.12
+PYTHON312 ?= python3.12
 
 .PHONY: setup test bench bench-real bench-synthetic prepare analysis figures clean
 
