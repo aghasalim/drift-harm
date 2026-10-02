@@ -20,13 +20,11 @@ import warnings
 from pathlib import Path
 
 import joblib
-import numpy as np
-import pandas as pd
 
 warnings.filterwarnings("ignore")
 
 from driftharm.calibration import harm_threshold, null_run, summarise_null, thresholds
-from driftharm.detectors import DETECTOR_NAMES, DETECTORS
+from driftharm.detectors import DETECTOR_NAMES
 from driftharm.metrics import per_archetype, rank_detectors
 from driftharm.suite import gradual_curve, label_alarms, run_suite
 
