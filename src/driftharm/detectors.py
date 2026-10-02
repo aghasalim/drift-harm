@@ -51,7 +51,7 @@ def _bin_edges(ref: np.ndarray, n_bins: int) -> np.ndarray:
     return edges
 
 
-def _hist_pair(ref: np.ndarray, cur: np.ndarray, n_bins: int):
+def _hist_pair(ref: np.ndarray, cur: np.ndarray, n_bins: int) -> tuple[np.ndarray, np.ndarray]:
     edges = _bin_edges(ref, n_bins)
     p = np.histogram(ref, bins=edges)[0].astype(float)
     q = np.histogram(cur, bins=edges)[0].astype(float)
@@ -111,7 +111,7 @@ def _aggregate(ref: np.ndarray, cur: np.ndarray, col_fn: Callable) -> float:
 # --------------------------------------------------------------------------
 
 
-def _impute_standardize(ref: np.ndarray, cur: np.ndarray):
+def _impute_standardize(ref: np.ndarray, cur: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     """Reference-median impute + reference standardize.
 
     Multivariate detectors cannot consume NaN. Imputing with the reference
