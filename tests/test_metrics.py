@@ -167,3 +167,18 @@ def test_harm_threshold_is_strictly_above_the_null_median(small_bundle):
     dets = {"ks": DETECTORS["ks"]}
     nd = null_run(small_bundle, n_reps=20, window=1500, seed=6, detectors=dets)
     assert harm_threshold(nd, alpha=0.05) > nd["auc_drop"].median()
+
+
+def test_segment_auc_drop_takes_the_reference_segment_from_its_own_scores(small_bundle, pair):
+    # The reference is the current window in a different order: nothing has
+    # changed, so the top-scored segment on each side is the same set of rows
+    # and the drop must be exactly zero. Reusing the current window's row
+    # indices on the reference picks a random slice and reports a large drop.
+    from driftharm.harm import segment_auc_drop
+
+    _, _, cur_X, cur_y = pair
+    perm = np.random.default_rng(0).permutation(len(cur_X))
+    k = len(cur_X) // 5
+    seg = np.argsort(-small_bundle.predict(cur_X))[:k]
+    drop = segment_auc_drop(small_bundle, cur_X[perm], cur_y[perm], cur_X, cur_y, seg)
+    assert abs(drop) < 1e-12
