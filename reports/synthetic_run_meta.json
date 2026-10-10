@@ -15,8 +15,8 @@
     "c2st": 0.010537578125000004
   },
   "harm_threshold_auc_drop": 0.008233045783321968,
-  "harm_threshold_segment_auc_drop": 0.259467532181899,
-  "null_segment_auc_drop_mean": 0.20715936558160042,
+  "harm_threshold_segment_auc_drop": 0.04773702255813655,
+  "null_segment_auc_drop_mean": -0.0037531341247356177,
   "null_auc_drop_mean": 0.00010776112658209028,
   "null_auc_drop_sd": 0.0055671773918502185,
   "bundle": {
@@ -28,5 +28,5 @@
     "pool_positive_rate": 0.15493333333333334,
     "pool_auc": 0.8422437158814222
   },
-  "runtime_seconds": 1436.7
+  "runtime_seconds": 1116.0
 }
