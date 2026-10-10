@@ -388,9 +388,14 @@ under that rule they score as harmless: harm rate 0.05, mean aggregate AUC drop
 0.003 and 0.002.
 
 They are not harmless. The 3%-segment AUC drop on those same trials averages
-0.182 (`dilution_shift`) and 0.381 (`dilution_permuted`) against a separately
-null-calibrated segment threshold of 0.111, and clears it in 20/20 replicates
-for both. So the detectors that fire on dilution are being charged for false
+0.130 (`dilution_shift`) and 0.329 (`dilution_permuted`) against a separately
+null-calibrated segment threshold of 0.038, and clears it in 20/20 replicates
+for both. (Until 2026-10-10 the reference side of this drop was the same row
+indices as the current segment, which on the reference window are just a random
+3%. That added about 0.05 to every real segment drop and 0.2 on synthetic, and
+put the null mean at 0.029 instead of -0.0005. The reference segment is now the
+top 3% of the reference window by the model's own scores. Every dilution trial
+still clears the threshold, so the labels and the table below did not move.) So the detectors that fire on dilution are being charged for false
 alarms on trials where the model is badly damaged inside the segment an operator
 would actually care about.
 

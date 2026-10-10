@@ -30,9 +30,18 @@ def auc_drop(bundle, ref_X, ref_y, cur_X, cur_y) -> dict:
 
 
 def segment_auc_drop(bundle, ref_X, ref_y, cur_X, cur_y, rows) -> float:
-    """AUC drop restricted to a row subset, for the dilution archetype."""
+    """AUC drop restricted to a row subset, for the dilution archetype.
+
+    `rows` index the current window. The reference side is the same-sized top
+    slice of the reference window by the model's own scores, which is how the
+    current segment was chosen. Indexing ref_X with `rows` would compare the
+    risky segment against a random 3% of the reference, and that gap alone
+    averaged 0.21 AUC under the null.
+    """
     if rows is None or len(rows) == 0:
         return float("nan")
-    a_ref = safe_auc(ref_y[rows], bundle.predict(ref_X[rows]))
+    ref_s = bundle.predict(ref_X)
+    ref_rows = np.argsort(-ref_s)[: len(rows)]
+    a_ref = safe_auc(ref_y[ref_rows], ref_s[ref_rows])
     a_cur = safe_auc(cur_y[rows], bundle.predict(cur_X[rows]))
     return a_ref - a_cur

@@ -15,8 +15,8 @@
     "c2st": 0.013510051269531278
   },
   "harm_threshold_auc_drop": 0.02076545159792065,
-  "harm_threshold_segment_auc_drop": 0.11132210023443508,
-  "null_segment_auc_drop_mean": 0.02882308490209842,
+  "harm_threshold_segment_auc_drop": 0.03806900851055419,
+  "null_segment_auc_drop_mean": -0.0004902834013388776,
   "null_auc_drop_mean": -9.5151396020751e-05,
   "null_auc_drop_sd": 0.011673891808560289,
   "bundle": {
@@ -33,5 +33,5 @@
     "train_dt_max": 5592303.0,
     "pool_dt_min": 5592304.0
   },
-  "runtime_seconds": 1196.7
+  "runtime_seconds": 886.1
 }
