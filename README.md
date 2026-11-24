@@ -1,3 +1,5 @@
+<p align="center"><img src="assets/banner.jpg" alt="Line drawing of six alarm bells above a distribution curve that has shifted sideways" width="100%"></p>
+
 # DriftHarm
 
 Do drift detectors tell you the model got worse?
@@ -19,6 +21,21 @@ Everything quoted here comes from a file in [`reports/`](reports/), and the long
 version of each section is in [notes/METHODS.md](notes/METHODS.md). The code in
 [`verify/`](verify/) recomputes every number from the trial level data on its own,
 and CI fails if any of them disagree.
+
+<details>
+<summary>Contents</summary>
+
+- [The headline result](#the-headline-result)
+- [Real and synthetic disagree no more than one dataset disagrees with itself](#real-and-synthetic-disagree-no-more-than-one-dataset-disagrees-with-itself)
+- [Where the errors come from](#where-the-errors-come-from)
+- [Instrument findings](#instrument-findings)
+- [Limitations](#limitations)
+- [Related work, and what is actually new here](#related-work-and-what-is-actually-new-here)
+- [Reproducing](#reproducing)
+- [Map of the repository](#map-of-the-repository)
+- [The four sources this is built on](#the-four-sources-this-is-built-on)
+
+</details>
 
 ## The headline result
 
