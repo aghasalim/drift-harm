@@ -1,5 +1,3 @@
-<p align="center"><img src="assets/banner.jpg" alt="Line drawing of six alarm bells above a distribution curve that has shifted sideways" width="100%"></p>
-
 # DriftHarm
 
 Do drift detectors tell you the model got worse?
